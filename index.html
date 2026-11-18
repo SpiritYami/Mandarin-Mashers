@@ -1388,32 +1388,43 @@ let state = {
 let chineseVoices = [];
 function refreshVoices() {
   if (typeof speechSynthesis === 'undefined') return;
-  chineseVoices = speechSynthesis.getVoices().filter(v =>
-    v.lang && v.lang.toLowerCase().startsWith('zh'));
+  const allVoices = speechSynthesis.getVoices();
+  
+  chineseVoices = allVoices.filter(v =>
+    v.lang && (
+      v.lang.toLowerCase().startsWith('zh') ||
+      v.lang.toLowerCase().includes('cmn') ||
+      v.name.toLowerCase().includes('chinese') ||
+      v.name.toLowerCase().includes('mandarin')
+    )
+  );
+
   const sel = document.getElementById('voiceSelect');
+  const warn = document.getElementById('audioWarning');
   if (!sel) return;
+
   if (chineseVoices.length === 0) {
     sel.innerHTML = '<option value="">No Mandarin voice found</option>';
-    const warn = document.getElementById('audioWarning');
-    if (warn) { warn.style.display = 'block';
-      warn.innerHTML = `⚠️ <b>No Mandarin voice detected.</b> Game still works — you just won't hear audio. To fix: Chrome/Edge often has one built in. Windows: Settings → Time & Language → Speech → Add voices → Chinese. Mac: System Settings → Accessibility → Spoken Content → System Voice → add Ting-Ting.`; }
+    if (warn) {
+      warn.style.display = 'block';
+      warn.innerHTML = `⚠️ <b>No Mandarin voice detected.</b> Game still works — you just won't hear audio.`;
+    }
     return;
   }
-  const warn = document.getElementById('audioWarning');
+
+  // Voices found! Clear warning and populate dropdown
   if (warn) warn.style.display = 'none';
-  sel.innerHTML = chineseVoices.map(v =>
-    `<option value="${v.voiceURI}">${v.name} (${v.lang})</option>`).join('');
-  const preferred = chineseVoices.find(v => /female|woman|女|ting|yaoyao|huihui/i.test(v.name))
-                 || chineseVoices[0];
-  state.selectedVoiceURI = preferred.voiceURI;
-  sel.value = preferred.voiceURI;
-  sel.onchange = () => { state.selectedVoiceURI = sel.value; };
+  sel.innerHTML = chineseVoices
+    .map((v, i) => `<option value="${i}">${v.name} (${v.lang})</option>`)
+    .join('');
 }
+
+refreshVoices();
 if (typeof speechSynthesis !== 'undefined') {
   speechSynthesis.onvoiceschanged = refreshVoices;
-  refreshVoices();
-  setTimeout(refreshVoices, 300);
-  setTimeout(refreshVoices, 1000);
+}
+setTimeout(refreshVoices, 500);
+setTimeout(refreshVoices, 1500);
 }
 function getSelectedVoice() {
   if (!state.selectedVoiceURI) return null;
