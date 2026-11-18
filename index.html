@@ -1415,7 +1415,7 @@ function refreshVoices() {
   // Voices found! Clear warning and populate dropdown
   if (warn) warn.style.display = 'none';
   sel.innerHTML = chineseVoices
-    .map((v, i) => `<option value="${i}">${v.name} (${v.lang})</option>`)
+    .map(v => `<option value="${v.voiceURI}">${v.name} (${v.lang})</option>`)
     .join('');
 }
 
@@ -1425,7 +1425,6 @@ if (typeof speechSynthesis !== 'undefined') {
 }
 setTimeout(refreshVoices, 500);
 setTimeout(refreshVoices, 1500);
-}
 function getSelectedVoice() {
   if (!state.selectedVoiceURI) return null;
   return chineseVoices.find(v => v.voiceURI === state.selectedVoiceURI) || null;
