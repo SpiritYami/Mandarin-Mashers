@@ -1,0 +1,2424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head link rel="manifest" href="manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mandarin Mashers 中文猛击</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --accent: #e94560; --gold: #ffd369; --green: #4ecca3;
+    --bg1: #0f0c29; --bg2: #302b63; --bg3: #24243e;
+    --blue: #5b8def;
+  }
+  body {
+    font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: linear-gradient(135deg, var(--bg1), var(--bg2), var(--bg3));
+    color: #eee; min-height: 100vh; display: flex;
+    align-items: center; justify-content: center; padding: 16px;
+    overflow-x: hidden;
+  }
+  #game {
+    width: 980px; max-width: 100%; background: rgba(0,0,0,0.45);
+    border-radius: 20px; padding: 22px;
+    box-shadow: 0 0 50px rgba(233,69,96,0.25);
+    border: 2px solid rgba(233,69,96,0.35);
+    position: relative;
+  }
+  .topbar {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 12px; gap: 8px; flex-wrap: wrap;
+  }
+  .topbar h1 { font-size: 22px; color: var(--gold); letter-spacing: 2px; }
+  .topbar-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .ctrl-btn {
+    font-size: 12px; padding: 6px 12px; border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05);
+    color: #ccc; cursor: pointer; transition: all 0.15s;
+  }
+  .ctrl-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+  .ctrl-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  .screen { text-align: center; padding: 24px 12px; }
+  .screen h2 { font-size: 34px; color: var(--gold); margin-bottom: 12px;
+               text-shadow: 0 0 20px rgba(255,211,105,0.4); }
+  .screen p { color: #ccc; margin-bottom: 16px; line-height: 1.7; font-size: 15px; }
+  .screen .big-btn {
+    font-size: 18px; padding: 14px 36px; border-radius: 12px;
+    border: none; cursor: pointer; font-weight: bold;
+    background: linear-gradient(135deg, var(--accent), #ff6b6b);
+    color: white; margin: 8px 6px; transition: transform 0.1s;
+  }
+  .screen .big-btn:hover { transform: translateY(-2px); }
+  .screen .big-btn.secondary {
+    background: linear-gradient(135deg, #4ecca3, #6bcb77);
+  }
+  .screen .big-btn.blue {
+    background: linear-gradient(135deg, var(--blue), #7ba5ff);
+  }
+  .screen .big-btn.ghost {
+    background: transparent; border: 2px solid rgba(255,255,255,0.3);
+  }
+  .difficulty-row { display: flex; gap: 10px; justify-content: center;
+                    margin: 16px 0; flex-wrap: wrap; }
+  .diff-btn {
+    padding: 12px 24px; border-radius: 10px; cursor: pointer;
+    border: 2px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05);
+    color: #ccc; font-size: 15px; font-weight: bold; transition: all 0.15s;
+    text-align: left;
+  }
+  .diff-btn.selected { border-color: var(--gold); color: var(--gold);
+                       background: rgba(255,211,105,0.1); }
+  .diff-btn small { display: block; font-size: 10px; color: #888;
+                    font-weight: normal; margin-top: 4px; }
+
+  /* MAP / SET SELECT */
+  .map-screen { text-align: left; }
+  .map-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 16px; flex-wrap: wrap; gap: 8px;
+  }
+  .map-header h2 { font-size: 24px; color: var(--gold); }
+  .map-difficulty-note {
+    font-size: 12px; color: #aaa; background: rgba(255,255,255,0.05);
+    padding: 6px 12px; border-radius: 8px; margin-bottom: 14px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .map-difficulty-note b { color: var(--gold); }
+  .level-block {
+    background: rgba(255,255,255,0.03); border-radius: 14px;
+    padding: 14px 16px; margin-bottom: 12px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .level-block.locked { opacity: 0.45; }
+  .level-block.above-difficulty {
+    opacity: 0.5;
+    border-color: rgba(255,184,77,0.3);
+    background: rgba(255,184,77,0.04);
+  }
+  .level-title {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px; gap: 8px; flex-wrap: wrap;
+  }
+  .level-title h3 { font-size: 17px; color: var(--gold); }
+  .level-title .hsk-tag {
+    font-size: 11px; padding: 2px 8px; border-radius: 10px;
+    background: rgba(91,141,239,0.2); color: var(--blue);
+    font-weight: bold; margin-left: 8px;
+  }
+  .level-title .level-progress { font-size: 12px; color: #888; }
+  .diff-warn {
+    font-size: 11px; color: #ffb84d;
+    background: rgba(255,184,77,0.12); padding: 4px 10px;
+    border-radius: 8px; margin-bottom: 10px; display: inline-block;
+  }
+  .sets-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+  }
+  .set-card {
+    background: rgba(255,255,255,0.05); border-radius: 10px;
+    padding: 12px; cursor: pointer; transition: all 0.15s;
+    border: 2px solid rgba(255,255,255,0.08);
+    position: relative;
+  }
+  .set-card:hover:not(.locked-set) {
+    border-color: var(--accent); background: rgba(233,69,96,0.1);
+    transform: translateY(-2px);
+  }
+  .set-card.locked-set { opacity: 0.4; cursor: not-allowed; }
+  .set-card.completed {
+    border-color: var(--green); background: rgba(78,204,163,0.08);
+  }
+  .set-card .set-num {
+    font-size: 10px; color: #888; text-transform: uppercase;
+    letter-spacing: 1px; margin-bottom: 4px;
+  }
+  .set-card .set-name {
+    font-size: 14px; font-weight: bold; color: #fff;
+    margin-bottom: 6px;
+  }
+  .set-card .set-sample {
+    font-size: 12px; color: #aaa; line-height: 1.4;
+    min-height: 34px;
+  }
+  .set-card .set-status {
+    font-size: 11px; margin-top: 8px; font-weight: bold;
+  }
+  .set-status.ready { color: var(--gold); }
+  .set-status.done { color: var(--green); }
+  .set-status.lock { color: #666; }
+  .set-card .mastery-bar {
+    height: 4px; background: #333; border-radius: 2px; margin-top: 8px;
+    overflow: hidden;
+  }
+  .set-card .mastery-fill {
+    height: 100%; background: var(--green); border-radius: 2px;
+    transition: width 0.3s;
+  }
+  .set-card.sentence-set .set-name::before {
+    content: '💬 ';
+  }
+
+  /* LESSON */
+  .lesson-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 16px; gap: 8px; flex-wrap: wrap;
+  }
+  .lesson-header h2 { font-size: 22px; color: var(--gold); }
+  .lesson-step-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+  .step-pill {
+    font-size: 11px; padding: 4px 10px; border-radius: 12px;
+    background: rgba(255,255,255,0.05); color: #666;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .step-pill.active {
+    background: var(--accent); color: #fff; border-color: var(--accent);
+  }
+  .step-pill.done {
+    background: rgba(78,204,163,0.2); color: var(--green);
+    border-color: var(--green);
+  }
+
+  /* LEARN CARDS */
+  .card-stack { max-width: 520px; margin: 0 auto; }
+  .learn-card {
+    background: rgba(255,255,255,0.06); border-radius: 18px;
+    padding: 32px 24px; text-align: center;
+    border: 1px solid rgba(255,255,255,0.12);
+    margin-bottom: 16px;
+    animation: cardIn 0.3s ease;
+  }
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .learn-card .lc-hanzi {
+    font-size: 60px; font-weight: bold; color: #fff;
+    margin-bottom: 8px; line-height: 1.2;
+  }
+  .learn-card .lc-hanzi.sentence { font-size: 34px; }
+  .learn-card .lc-pinyin {
+    font-size: 22px; color: var(--gold); margin-bottom: 6px;
+  }
+  .learn-card .lc-pinyin.sentence { font-size: 16px; }
+  .learn-card .lc-english {
+    font-size: 17px; color: #ccc; margin-bottom: 16px;
+  }
+  .learn-card .lc-audio-btn {
+    background: var(--green); border: none; color: #fff;
+    padding: 10px 22px; border-radius: 10px; cursor: pointer;
+    font-size: 14px; font-weight: bold;
+  }
+  .card-nav {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 10px;
+  }
+  .card-nav button {
+    padding: 12px 24px; border-radius: 10px; border: none;
+    font-size: 15px; font-weight: bold; cursor: pointer;
+    transition: transform 0.1s;
+  }
+  .card-nav .prev-btn {
+    background: transparent; border: 2px solid rgba(255,255,255,0.2);
+    color: #ccc;
+  }
+  .card-nav .next-btn {
+    background: linear-gradient(135deg, var(--accent), #ff6b6b);
+    color: white;
+  }
+  .card-nav button:disabled { opacity: 0.3; cursor: not-allowed; }
+  .card-nav .card-counter { color: #888; font-size: 13px; }
+
+  /* QUIZ */
+  .quiz-box { max-width: 560px; margin: 0 auto; }
+  .quiz-prompt {
+    background: rgba(255,255,255,0.06); border-radius: 14px;
+    padding: 24px; text-align: center; margin-bottom: 16px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .quiz-prompt .qp-label {
+    font-size: 11px; color: #888; letter-spacing: 1.5px;
+    text-transform: uppercase; margin-bottom: 10px;
+  }
+  .quiz-prompt .qp-hanzi {
+    font-size: 52px; font-weight: bold; color: #fff; line-height: 1.2;
+  }
+  .quiz-prompt .qp-hanzi.sentence { font-size: 28px; }
+  .quiz-options { display: grid; gap: 10px; }
+  .quiz-option {
+    padding: 16px; border-radius: 12px;
+    border: 2px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.04); color: #fff;
+    font-size: 16px; cursor: pointer; transition: all 0.15s;
+    text-align: left;
+  }
+  .quiz-option:hover:not(:disabled) {
+    border-color: var(--accent); background: rgba(233,69,96,0.12);
+  }
+  .quiz-option.correct {
+    border-color: var(--green); background: rgba(78,204,163,0.2);
+  }
+  .quiz-option.wrong {
+    border-color: var(--accent); background: rgba(233,69,96,0.15);
+  }
+  .quiz-option:disabled { cursor: default; }
+  .quiz-progress {
+    text-align: center; color: #888; font-size: 13px; margin: 12px 0;
+  }
+
+  /* PRODUCTION */
+  .prod-box { max-width: 560px; margin: 0 auto; text-align: center; }
+  .prod-box .prod-hanzi {
+    font-size: 54px; font-weight: bold; color: #fff; margin: 16px 0;
+  }
+  .prod-box .prod-hanzi.sentence { font-size: 30px; }
+  .prod-box .prod-english {
+    font-size: 16px; color: #aaa; margin-bottom: 6px;
+  }
+  .prod-box input {
+    font-size: 22px; padding: 14px 18px; border-radius: 12px;
+    border: 2px solid #444; background: #1a1a2e; color: #fff;
+    text-align: center; outline: none; width: 320px; max-width: 90%;
+    margin: 12px 0;
+  }
+  .prod-box input:focus { border-color: var(--accent); }
+  .prod-box input.correct { border-color: var(--green); background: #1a3a2e; }
+  .prod-box input.wrong { border-color: var(--accent); background: #3a1a1e; }
+  .prod-feedback {
+    min-height: 26px; font-size: 15px; font-weight: bold; margin: 8px 0;
+  }
+  .prod-feedback.ok { color: var(--green); }
+  .prod-feedback.err { color: #ff6b6b; }
+
+  /* READY TO FIGHT */
+  .intro-box {
+    text-align: center; padding: 30px 20px; max-width: 640px; margin: 0 auto;
+  }
+  .intro-box h2 { color: var(--gold); font-size: 30px; margin-bottom: 14px; }
+  .intro-box p { color: #ccc; font-size: 16px; line-height: 1.7; margin-bottom: 12px; }
+  .word-chips {
+    display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+    margin: 16px 0;
+  }
+  .word-chip {
+    background: rgba(255,211,105,0.12); border: 1px solid rgba(255,211,105,0.3);
+    border-radius: 8px; padding: 8px 12px; font-size: 14px; color: #fff;
+  }
+  .word-chip .wc-hanzi { font-size: 17px; }
+  .word-chip .wc-pinyin { font-size: 11px; color: var(--gold); display: block; }
+  .word-chip .wc-english { font-size: 10px; color: #999; display: block; }
+
+  /* ARENA */
+  .arena {
+    display: grid; grid-template-columns: 1fr 70px 1fr;
+    align-items: center; margin-bottom: 12px; gap: 10px;
+  }
+  .fighter { text-align: center; }
+  .fighter .sprite {
+    font-size: 64px; height: 82px; line-height: 82px;
+    transition: transform 0.15s, filter 0.15s;
+  }
+  .fighter.hit .sprite {
+    transform: translateX(22px) rotate(-15deg);
+    filter: brightness(2) hue-rotate(-30deg);
+  }
+  .fighter.attack .sprite { transform: translateX(-18px) scale(1.18); }
+  .fighter.ko .sprite { filter: grayscale(1); transform: rotate(90deg); opacity: 0.4; }
+  .fighter .name { font-weight: bold; font-size: 13px; margin-top: 4px; }
+  .hp-bar {
+    width: 100%; height: 20px; background: #222; border-radius: 10px;
+    overflow: hidden; border: 2px solid #444; margin-top: 6px; position: relative;
+  }
+  .hp-fill {
+    height: 100%; transition: width 0.35s ease;
+    background: linear-gradient(90deg, var(--accent), #ff6b6b);
+  }
+  .hp-fill.p2 { background: linear-gradient(90deg, var(--green), #6bcb77); }
+  .hp-text {
+    position: absolute; inset: 0; display: flex; align-items: center;
+    justify-content: center; font-size: 11px; font-weight: bold;
+    text-shadow: 0 1px 2px #000;
+  }
+  .vs { font-size: 30px; font-weight: 900; color: var(--gold);
+        text-align: center; text-shadow: 0 0 12px var(--gold); }
+
+  .combo-meter { text-align: center; height: 38px; margin: 4px 0; }
+  .combo-text {
+    font-size: 26px; font-weight: 900; color: var(--gold);
+    text-shadow: 0 0 15px #ff9f43; transition: transform 0.15s;
+    display: inline-block;
+  }
+  .combo-text.pop { transform: scale(1.35); }
+
+  .prompt-box {
+    background: rgba(255,255,255,0.05); border-radius: 14px;
+    padding: 18px; text-align: center; margin-bottom: 12px;
+    border: 1px solid rgba(255,255,255,0.1); position: relative;
+  }
+  .prompt-label {
+    font-size: 11px; color: #888; letter-spacing: 1.5px;
+    text-transform: uppercase; margin-bottom: 6px;
+  }
+  .prompt-word {
+    font-size: 44px; font-weight: bold; color: #fff;
+    min-height: 58px; transition: color 0.3s; line-height: 1.1;
+  }
+  .prompt-word.sentence { font-size: 26px; }
+  .prompt-hint {
+    font-size: 14px; color: #999; margin-top: 6px; min-height: 22px;
+  }
+  .replay-btn {
+    display: inline-block; margin-top: 8px; padding: 4px 12px;
+    font-size: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2);
+    background: transparent; color: #aaa; cursor: pointer;
+  }
+  .replay-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .srs-badge {
+    position: absolute; top: 10px; left: 14px; font-size: 11px;
+    color: var(--green); font-weight: bold;
+  }
+
+  .input-row { display: flex; gap: 10px; margin-bottom: 10px; }
+  #answer {
+    flex: 1; font-size: 22px; padding: 14px 18px; border-radius: 12px;
+    border: 2px solid #444; background: #1a1a2e; color: #fff;
+    text-align: center; outline: none; transition: border-color 0.2s, background 0.2s;
+  }
+  #answer:focus { border-color: var(--accent); }
+  #answer.correct { border-color: var(--green); background: #1a3a2e; }
+  #answer.wrong { border-color: var(--accent); background: #3a1a1e;
+                  animation: shake 0.3s; }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+  }
+  button.attack-btn {
+    font-size: 17px; font-weight: bold; padding: 14px 26px;
+    border-radius: 12px; border: none; cursor: pointer;
+    background: linear-gradient(135deg, var(--accent), #ff6b6b);
+    color: white; transition: transform 0.1s;
+  }
+  button.attack-btn:active { transform: scale(0.95); }
+
+  .footer {
+    display: flex; justify-content: space-between; font-size: 12px;
+    color: #888; flex-wrap: wrap; gap: 8px; margin-top: 8px;
+  }
+  .footer b { color: var(--gold); }
+  .footer .dot { color: #555; margin: 0 4px; }
+
+  .special {
+    position: fixed; inset: 0; pointer-events: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 72px; font-weight: 900; color: var(--gold);
+    text-shadow: 0 0 30px #ff9f43, 0 0 70px var(--accent);
+    opacity: 0; transition: opacity 0.3s; z-index: 100;
+    text-align: center; padding: 20px;
+  }
+  .special.show { opacity: 1; animation: specialPulse 0.9s; }
+  @keyframes specialPulse {
+    0% { transform: scale(0.5); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+
+  .stats-table { width: 100%; margin: 20px 0; font-size: 14px;
+                 border-collapse: collapse; text-align: left; }
+  .stats-table th, .stats-table td { padding: 8px 10px;
+                                     border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .stats-table th { color: var(--gold); font-size: 12px;
+                    text-transform: uppercase; letter-spacing: 1px; }
+  .stats-row-correct { color: var(--green); }
+  .stats-row-wrong { color: #ff6b6b; }
+
+  .pause-overlay {
+    position: absolute; inset: 0; background: rgba(0,0,0,0.85);
+    border-radius: 20px; display: none; align-items: center;
+    justify-content: center; flex-direction: column; z-index: 50;
+    gap: 16px;
+  }
+  .pause-overlay.show { display: flex; }
+  .pause-overlay h2 { color: var(--gold); font-size: 32px; }
+
+  .toggle { display: inline-flex; align-items: center; gap: 6px;
+            font-size: 12px; color: #aaa; cursor: pointer; user-select: none; }
+  .toggle input { display: none; }
+  .toggle .slider {
+    width: 34px; height: 18px; background: #444; border-radius: 9px;
+    position: relative; transition: background 0.2s;
+  }
+  .toggle .slider::after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 14px; height: 14px; background: #fff; border-radius: 50%;
+    transition: transform 0.2s;
+  }
+  .toggle input:checked + .slider { background: var(--green); }
+  .toggle input:checked + .slider::after { transform: translateX(16px); }
+
+  .audio-panel {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px; padding: 14px 18px; margin: 16px auto 0;
+    max-width: 640px; font-size: 13px; text-align: left;
+  }
+  .audio-panel h4 { color: var(--gold); font-size: 13px; margin-bottom: 10px;
+                    text-transform: uppercase; letter-spacing: 1px; }
+  .audio-row { display: flex; align-items: center; gap: 10px;
+               margin-bottom: 10px; flex-wrap: wrap; }
+  .audio-row label { color: #aaa; font-size: 12px; min-width: 100px; }
+  .audio-row select, .audio-row input[type=range] {
+    flex: 1; min-width: 140px; background: #1a1a2e; color: #eee;
+    border: 1px solid #444; border-radius: 6px; padding: 6px 8px; font-size: 12px;
+  }
+  .audio-row input[type=range] { padding: 0; }
+  .audio-test-btn {
+    background: var(--accent); color: #fff; border: none;
+    padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px;
+    font-weight: bold;
+  }
+  .audio-warn {
+    color: #ffb84d; font-size: 12px; margin-top: 8px;
+    padding: 8px 10px; background: rgba(255,184,77,0.1);
+    border-radius: 6px; border: 1px solid rgba(255,184,77,0.3);
+  }
+
+  /* TUTORIAL */
+  #tutorialScreen { padding: 20px 10px; }
+  .tut-track-tabs {
+    display: flex; gap: 8px; justify-content: center; margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .tut-track-tab {
+    padding: 8px 16px; border-radius: 8px; cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.04);
+    color: #aaa; font-size: 12px; font-weight: bold;
+  }
+  .tut-track-tab.active {
+    background: rgba(233,69,96,0.2); border-color: var(--accent); color: #fff;
+  }
+  .tut-progress {
+    display: flex; justify-content: center; gap: 6px; margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .tut-step-dot {
+    width: 28px; height: 28px; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center; font-size: 11px;
+    font-weight: bold; background: rgba(255,255,255,0.08);
+    color: #888; border: 2px solid transparent;
+  }
+  .tut-step-dot.active {
+    background: var(--accent); color: #fff; border-color: #ff9f43;
+    box-shadow: 0 0 12px rgba(233,69,96,0.6);
+  }
+  .tut-step-dot.done { background: var(--green); color: #fff; }
+  .tut-card {
+    background: rgba(255,255,255,0.05); border-radius: 16px;
+    padding: 26px 22px; border: 1px solid rgba(255,255,255,0.12);
+    max-width: 720px; margin: 0 auto; text-align: center;
+  }
+  .tut-card h3 { color: var(--gold); font-size: 23px; margin-bottom: 14px; }
+  .tut-card p {
+    color: #ccc; line-height: 1.75; font-size: 15px;
+    margin-bottom: 12px; text-align: left;
+  }
+  .tut-card .tut-example {
+    background: rgba(0,0,0,0.3); border-radius: 10px; padding: 14px;
+    margin: 12px 0; font-size: 16px; color: #fff; text-align: left;
+    line-height: 1.8;
+  }
+  .tut-card .tut-keyboard {
+    display: inline-block; background: #222; border: 1px solid #555;
+    border-radius: 6px; padding: 2px 8px; font-family: monospace;
+    font-size: 13px; color: var(--gold); margin: 0 2px;
+  }
+  .tut-tone-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(130px,1fr));
+    gap: 12px; margin: 16px 0;
+  }
+  .tut-tone-box {
+    background: rgba(0,0,0,0.3); border-radius: 12px;
+    padding: 14px 10px; text-align: center;
+    border: 1px solid rgba(255,255,255,0.1); cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tut-tone-box:hover { background: rgba(233,69,96,0.15); border-color: var(--accent); }
+  .tut-tone-box .tone-num { font-size: 24px; font-weight: bold; color: var(--gold); }
+  .tut-tone-box .tone-char { font-size: 36px; font-weight: bold; color: #fff; margin: 4px 0; }
+  .tut-tone-box .tone-name { font-size: 11px; color: #aaa; text-transform: uppercase; }
+  .tut-tone-box .tone-desc { font-size: 11px; color: #888; margin-top: 4px; }
+  .tut-input {
+    font-size: 20px; padding: 12px 16px; border-radius: 10px;
+    border: 2px solid #444; background: #1a1a2e; color: #fff;
+    text-align: center; outline: none; width: 240px; margin: 10px 0;
+  }
+  .tut-input:focus { border-color: var(--accent); }
+  .tut-feedback {
+    font-size: 15px; min-height: 22px; margin: 8px 0;
+    font-weight: bold;
+  }
+  .tut-feedback.ok { color: var(--green); }
+  .tut-feedback.err { color: #ff6b6b; }
+  .tut-nav {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 18px; gap: 10px; max-width: 720px; margin-left: auto; margin-right: auto;
+  }
+  .tut-nav button {
+    padding: 12px 26px; border-radius: 10px; border: none;
+    font-size: 15px; font-weight: bold; cursor: pointer;
+    transition: transform 0.1s;
+  }
+  .tut-nav .back {
+    background: transparent; border: 2px solid rgba(255,255,255,0.2);
+    color: #ccc;
+  }
+  .tut-nav .next {
+    background: linear-gradient(135deg, var(--accent), #ff6b6b);
+    color: white;
+  }
+  .tut-nav button:hover:not(:disabled) { transform: translateY(-2px); }
+
+  .grammar-highlight { color: var(--gold); font-weight: bold; }
+  .grammar-breakdown {
+    display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+    margin: 12px 0;
+  }
+  .grammar-chip {
+    background: rgba(255,211,105,0.1); border: 1px solid rgba(255,211,105,0.3);
+    border-radius: 8px; padding: 8px 12px; font-size: 15px;
+    text-align: center; min-width: 70px; cursor: pointer;
+  }
+  .grammar-chip .gc-hanzi { font-size: 20px; color: #fff; }
+  .grammar-chip .gc-pinyin { font-size: 11px; color: #ffd369; }
+  .grammar-chip .gc-gloss { font-size: 10px; color: #999; }
+  .grammar-pattern {
+    background: rgba(78,204,163,0.1); border-left: 3px solid var(--green);
+    padding: 10px 14px; margin: 14px 0; border-radius: 6px;
+    font-family: monospace; font-size: 14px; color: #d0f5e8;
+    text-align: left;
+  }
+  .grammar-choice {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr));
+    gap: 10px; margin: 14px 0;
+  }
+  .grammar-choice button {
+    padding: 16px 14px; border-radius: 10px;
+    border: 2px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05);
+    color: #fff; font-size: 15px; cursor: pointer; transition: all 0.15s;
+    text-align: left;
+  }
+  .grammar-choice button:hover:not(:disabled) {
+    border-color: var(--accent); background: rgba(233,69,96,0.15);
+  }
+  .grammar-choice button.gc-correct {
+    border-color: var(--green); background: rgba(78,204,163,0.2);
+  }
+  .grammar-choice button.gc-wrong {
+    border-color: #ff6b6b; background: rgba(255,107,107,0.15);
+  }
+  .grammar-choice button small { color: #888; font-size: 11px; display: block; margin-top: 4px; }
+  .speak-inline {
+    background: none; border: none; cursor: pointer; color: var(--green);
+    font-size: 14px; padding: 0 4px;
+  }
+  .speak-inline:hover { color: #6bcb77; }
+</style>
+</head>
+<body>
+<div id="game">
+
+  <!-- TITLE -->
+  <div id="titleScreen" class="screen">
+    <h2>🥋 MANDARIN MASHERS 中文猛击</h2>
+    <p>
+      Learn Chinese 8 words at a time. Each set has a <b>lesson</b> (see the words,
+      hear them, quiz yourself), then a <b>fight</b> to prove you've got them.
+      Beat the fight → unlock the next set.
+    </p>
+
+    <div class="difficulty-row" id="diffRow">
+      <button class="diff-btn selected" data-diff="easy">😌 EASY
+        <small>Levels 1–4 · words & short phrases</small>
+      </button>
+      <button class="diff-btn" data-diff="normal">⚔️ NORMAL
+        <small>Levels 1–7 · includes full sentences</small>
+      </button>
+      <button class="diff-btn" data-diff="hard">💀 HARD
+        <small>All 8 levels · abstract & compound</small>
+      </button>
+    </div>
+
+    <div style="display:flex; gap:20px; justify-content:center; margin: 12px 0; flex-wrap:wrap; font-size: 13px; color:#bbb;">
+      <label class="toggle">
+        <input type="checkbox" id="toneStrict" checked>
+        <span class="slider"></span>
+        Tone-strict
+      </label>
+      <label class="toggle">
+        <input type="checkbox" id="autoSpeak" checked>
+        <span class="slider"></span>
+        Auto-speak Mandarin
+      </label>
+    </div>
+
+    <div class="audio-panel">
+      <h4>🔊 Audio Settings</h4>
+      <div class="audio-row">
+        <label>Mandarin voice:</label>
+        <select id="voiceSelect"><option value="">Loading...</option></select>
+        <button class="audio-test-btn" onclick="testVoice()">Test</button>
+      </div>
+      <div class="audio-row">
+        <label>Speaking speed:</label>
+        <input type="range" id="voiceRate" min="0.5" max="1.2" step="0.05" value="0.85">
+        <span id="rateLabel" style="color:#ffd369; min-width: 40px;">0.85×</span>
+      </div>
+      <div class="audio-row">
+        <label>Speak on answer:</label>
+        <label class="toggle" style="font-size:12px;">
+          <input type="checkbox" id="speakOnAnswer" checked>
+          <span class="slider"></span>
+          <span>Say the full word when you get it right</span>
+        </label>
+      </div>
+      <div id="audioWarning" class="audio-warn" style="display:none;"></div>
+    </div>
+
+    <div style="margin-top: 20px;">
+      <button class="big-btn" onclick="showMap()">▶ CONTINUE 继续</button>
+      <button class="big-btn secondary" onclick="startTutorial('basics')">📖 Pinyin & Tones</button>
+      <button class="big-btn secondary" onclick="startTutorial('grammar')">📐 Grammar</button>
+      <button class="big-btn ghost" onclick="showStats()">📊 Stats</button>
+    </div>
+  </div>
+
+  <!-- MAP -->
+  <div id="mapScreen" class="screen map-screen" style="display:none;">
+    <div class="map-header">
+      <h2>📚 Your Curriculum</h2>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="ctrl-btn" onclick="backToTitle()">← Menu</button>
+        <button class="ctrl-btn" onclick="showStats()">📊 Stats</button>
+      </div>
+    </div>
+    <div id="mapDifficultyNote" class="map-difficulty-note"></div>
+    <div id="mapContent"></div>
+  </div>
+
+  <!-- LESSON -->
+  <div id="lessonScreen" class="screen" style="display:none;">
+    <div class="lesson-header">
+      <h2 id="lessonTitle"></h2>
+      <div class="lesson-step-pills" id="lessonPills"></div>
+    </div>
+    <div id="lessonBody"></div>
+  </div>
+
+  <!-- FIGHT -->
+  <div id="gameScreen" style="display:none;">
+    <div class="topbar">
+      <h1 id="fightTitle">MANDARIN MASHERS</h1>
+      <div class="topbar-controls">
+        <button class="ctrl-btn" id="muteBtn" onclick="toggleMute()">🔊 Sound</button>
+        <button class="ctrl-btn" onclick="togglePause()">⏸ Pause</button>
+        <button class="ctrl-btn" onclick="quitFight()">✖ Quit</button>
+      </div>
+    </div>
+
+    <div class="arena">
+      <div class="fighter" id="p1">
+        <div class="sprite">🐉</div>
+        <div class="name">YOU 你</div>
+        <div class="hp-bar"><div class="hp-fill" id="hp1" style="width:100%"></div>
+          <div class="hp-text" id="hp1Text">100</div></div>
+      </div>
+      <div class="vs">VS</div>
+      <div class="fighter" id="p2">
+        <div class="sprite" id="enemySprite">👹</div>
+        <div class="name" id="enemyName">OPPONENT 对手</div>
+        <div class="hp-bar"><div class="hp-fill p2" id="hp2" style="width:100%"></div>
+          <div class="hp-text" id="hp2Text">100</div></div>
+      </div>
+    </div>
+
+    <div class="combo-meter">
+      <div class="combo-text" id="comboText"></div>
+    </div>
+
+    <div class="prompt-box">
+      <div class="srs-badge" id="srsBadge"></div>
+      <div class="prompt-label" id="promptLabel">Type pinyin</div>
+      <div class="prompt-word" id="promptWord">...</div>
+      <div class="prompt-hint" id="promptHint"></div>
+      <button class="replay-btn" onclick="speakCurrent()">🔊 Replay</button>
+    </div>
+
+    <div class="input-row">
+      <input id="answer" type="text" autocomplete="off"
+             autocapitalize="off" spellcheck="false" placeholder="type pinyin...">
+      <button class="attack-btn" id="attackBtn" onclick="submitAnswer()">ATTACK</button>
+    </div>
+
+    <div class="footer">
+      <span>Set <b id="levelLabel">1-1</b></span>
+      <span class="dot">·</span>
+      <span>Score <b id="scoreLabel">0</b></span>
+      <span class="dot">·</span>
+      <span>Combo <b id="bestComboLabel">0</b></span>
+      <span class="dot">·</span>
+      <span>Reviewed <b id="reviewedLabel">0</b></span>
+      <span class="dot">·</span>
+      <span>Due <b id="dueLabel">0</b></span>
+    </div>
+
+    <div class="pause-overlay" id="pauseOverlay">
+      <h2>PAUSED</h2>
+      <button class="big-btn" onclick="togglePause()">Resume</button>
+      <button class="big-btn ghost" onclick="quitFight()">Quit fight</button>
+    </div>
+  </div>
+
+  <!-- END -->
+  <div id="endScreen" class="screen" style="display:none;">
+    <h2 id="endTitle"></h2>
+    <div id="endText"></div>
+    <div style="margin-top: 22px;">
+      <button class="big-btn" id="endPrimaryBtn" onclick="endPrimaryAction()"></button>
+      <button class="big-btn ghost" onclick="showMap()">Back to map</button>
+    </div>
+  </div>
+
+  <!-- TUTORIAL -->
+  <div id="tutorialScreen" class="screen" style="display:none;">
+    <div class="tut-track-tabs">
+      <div class="tut-track-tab" data-track="basics" onclick="switchTrack('basics')">📖 Pinyin & Tones</div>
+      <div class="tut-track-tab" data-track="grammar" onclick="switchTrack('grammar')">📐 Grammar</div>
+    </div>
+    <div class="tut-progress" id="tutProgress"></div>
+    <div class="tut-card" id="tutCard"></div>
+    <div class="tut-nav">
+      <button class="back" onclick="tutBack()" id="tutBack">← Back</button>
+      <span style="color:#888; font-size:13px;" id="tutCounter"></span>
+      <button class="next" onclick="tutNext()" id="tutNext">Next →</button>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div id="statsScreen" class="screen" style="display:none;">
+    <h2>📊 Your Progress</h2>
+    <div id="statsContent"></div>
+    <div style="margin-top: 22px;">
+      <button class="big-btn" onclick="showMap()">Back to map</button>
+      <button class="big-btn ghost" onclick="resetStats()">Reset Stats</button>
+    </div>
+  </div>
+
+</div>
+<div class="special" id="specialMove"></div>
+
+<script>
+/* =========================================================
+   CURRICULUM — 8 levels, ~46 sets, difficulty-gated
+   Sets marked sentence:true render hanzi smaller
+   ========================================================= */
+const CURRICULUM = [
+  {
+    name: "Greetings & Basics", hsk: "HSK 1", maxDifficulty: 0,
+    sets: [
+      { name: "Hello & Goodbye", words: [
+        { hanzi: "你好", pinyin: "nǐ hǎo", english: "hello" },
+        { hanzi: "谢谢", pinyin: "xiè xie", english: "thank you" },
+        { hanzi: "再见", pinyin: "zài jiàn", english: "goodbye" },
+        { hanzi: "对不起", pinyin: "duì bu qǐ", english: "sorry" },
+        { hanzi: "没关系", pinyin: "méi guān xi", english: "it's okay" },
+        { hanzi: "请", pinyin: "qǐng", english: "please" },
+        { hanzi: "不客气", pinyin: "bú kè qi", english: "you're welcome" },
+        { hanzi: "早上好", pinyin: "zǎo shang hǎo", english: "good morning" },
+      ]},
+      { name: "Yes, No, Thanks", words: [
+        { hanzi: "是", pinyin: "shì", english: "to be / yes" },
+        { hanzi: "不", pinyin: "bù", english: "not / no" },
+        { hanzi: "好", pinyin: "hǎo", english: "good" },
+        { hanzi: "对", pinyin: "duì", english: "correct" },
+        { hanzi: "没事", pinyin: "méi shì", english: "no problem" },
+        { hanzi: "可以", pinyin: "kě yǐ", english: "can / okay" },
+        { hanzi: "当然", pinyin: "dāng rán", english: "of course" },
+        { hanzi: "真的", pinyin: "zhēn de", english: "really" },
+      ]},
+      { name: "Pronouns", words: [
+        { hanzi: "我", pinyin: "wǒ", english: "I / me" },
+        { hanzi: "你", pinyin: "nǐ", english: "you" },
+        { hanzi: "他", pinyin: "tā", english: "he / him" },
+        { hanzi: "她", pinyin: "tā", english: "she / her" },
+        { hanzi: "我们", pinyin: "wǒ men", english: "we / us" },
+        { hanzi: "你们", pinyin: "nǐ men", english: "you (plural)" },
+        { hanzi: "他们", pinyin: "tā men", english: "they (m)" },
+        { hanzi: "她们", pinyin: "tā men", english: "they (f)" },
+      ]},
+      { name: "Numbers 1-8", words: [
+        { hanzi: "一", pinyin: "yī", english: "one" },
+        { hanzi: "二", pinyin: "èr", english: "two" },
+        { hanzi: "三", pinyin: "sān", english: "three" },
+        { hanzi: "四", pinyin: "sì", english: "four" },
+        { hanzi: "五", pinyin: "wǔ", english: "five" },
+        { hanzi: "六", pinyin: "liù", english: "six" },
+        { hanzi: "七", pinyin: "qī", english: "seven" },
+        { hanzi: "八", pinyin: "bā", english: "eight" },
+      ]},
+      { name: "Question Words", words: [
+        { hanzi: "什么", pinyin: "shén me", english: "what" },
+        { hanzi: "谁", pinyin: "shéi", english: "who" },
+        { hanzi: "哪儿", pinyin: "nǎr", english: "where" },
+        { hanzi: "怎么", pinyin: "zěn me", english: "how" },
+        { hanzi: "为什么", pinyin: "wèi shén me", english: "why" },
+        { hanzi: "几", pinyin: "jǐ", english: "how many" },
+        { hanzi: "多少", pinyin: "duō shao", english: "how much" },
+        { hanzi: "什么时候", pinyin: "shén me shí hou", english: "when" },
+      ]},
+      // ===== FIRST SENTENCE SET =====
+      { name: "First Sentences", sentence: true, words: [
+        { hanzi: "你好吗", pinyin: "nǐ hǎo ma", english: "how are you?" },
+        { hanzi: "我很好", pinyin: "wǒ hěn hǎo", english: "I'm fine" },
+        { hanzi: "我饿了", pinyin: "wǒ è le", english: "I'm hungry" },
+        { hanzi: "我渴了", pinyin: "wǒ kě le", english: "I'm thirsty" },
+        { hanzi: "我累了", pinyin: "wǒ lèi le", english: "I'm tired" },
+        { hanzi: "这是什么", pinyin: "zhè shì shén me", english: "what is this?" },
+        { hanzi: "我不知道", pinyin: "wǒ bù zhī dào", english: "I don't know" },
+        { hanzi: "谢谢你", pinyin: "xiè xie nǐ", english: "thank you" },
+      ]},
+    ]
+  },
+  {
+    name: "People & Family", hsk: "HSK 1", maxDifficulty: 0,
+    sets: [
+      { name: "Family", words: [
+        { hanzi: "妈妈", pinyin: "mā ma", english: "mom" },
+        { hanzi: "爸爸", pinyin: "bà ba", english: "dad" },
+        { hanzi: "哥哥", pinyin: "gē ge", english: "older brother" },
+        { hanzi: "姐姐", pinyin: "jiě jie", english: "older sister" },
+        { hanzi: "弟弟", pinyin: "dì di", english: "younger brother" },
+        { hanzi: "妹妹", pinyin: "mèi mei", english: "younger sister" },
+        { hanzi: "儿子", pinyin: "ér zi", english: "son" },
+        { hanzi: "女儿", pinyin: "nǚ ér", english: "daughter" },
+      ]},
+      { name: "People & Jobs", words: [
+        { hanzi: "人", pinyin: "rén", english: "person" },
+        { hanzi: "老师", pinyin: "lǎo shī", english: "teacher" },
+        { hanzi: "学生", pinyin: "xué sheng", english: "student" },
+        { hanzi: "医生", pinyin: "yī shēng", english: "doctor" },
+        { hanzi: "朋友", pinyin: "péng you", english: "friend" },
+        { hanzi: "名字", pinyin: "míng zi", english: "name" },
+        { hanzi: "同事", pinyin: "tóng shì", english: "colleague" },
+        { hanzi: "老板", pinyin: "lǎo bǎn", english: "boss" },
+      ]},
+      { name: "Countries", words: [
+        { hanzi: "中国", pinyin: "zhōng guó", english: "China" },
+        { hanzi: "美国", pinyin: "měi guó", english: "USA" },
+        { hanzi: "英国", pinyin: "yīng guó", english: "UK" },
+        { hanzi: "日本", pinyin: "rì běn", english: "Japan" },
+        { hanzi: "法国", pinyin: "fǎ guó", english: "France" },
+        { hanzi: "德国", pinyin: "dé guó", english: "Germany" },
+        { hanzi: "中文", pinyin: "zhōng wén", english: "Chinese (language)" },
+        { hanzi: "英文", pinyin: "yīng wén", english: "English (language)" },
+      ]},
+      { name: "Body & Face", words: [
+        { hanzi: "眼睛", pinyin: "yǎn jing", english: "eye" },
+        { hanzi: "耳朵", pinyin: "ěr duo", english: "ear" },
+        { hanzi: "鼻子", pinyin: "bí zi", english: "nose" },
+        { hanzi: "嘴", pinyin: "zuǐ", english: "mouth" },
+        { hanzi: "手", pinyin: "shǒu", english: "hand" },
+        { hanzi: "脚", pinyin: "jiǎo", english: "foot" },
+        { hanzi: "头", pinyin: "tóu", english: "head" },
+        { hanzi: "身体", pinyin: "shēn tǐ", english: "body" },
+      ]},
+      { name: "Colors", words: [
+        { hanzi: "红色", pinyin: "hóng sè", english: "red" },
+        { hanzi: "蓝色", pinyin: "lán sè", english: "blue" },
+        { hanzi: "绿色", pinyin: "lǜ sè", english: "green" },
+        { hanzi: "黄色", pinyin: "huáng sè", english: "yellow" },
+        { hanzi: "黑色", pinyin: "hēi sè", english: "black" },
+        { hanzi: "白色", pinyin: "bái sè", english: "white" },
+        { hanzi: "颜色", pinyin: "yán sè", english: "color" },
+        { hanzi: "紫色", pinyin: "zǐ sè", english: "purple" },
+      ]},
+      // ===== SECOND SENTENCE SET =====
+      { name: "Who & What Sentences", sentence: true, words: [
+        { hanzi: "你是谁", pinyin: "nǐ shì shéi", english: "who are you?" },
+        { hanzi: "我是学生", pinyin: "wǒ shì xué sheng", english: "I am a student" },
+        { hanzi: "他是老师", pinyin: "tā shì lǎo shī", english: "he is a teacher" },
+        { hanzi: "她是医生", pinyin: "tā shì yī shēng", english: "she is a doctor" },
+        { hanzi: "他是我的朋友", pinyin: "tā shì wǒ de péng you", english: "he is my friend" },
+        { hanzi: "你喜欢什么颜色", pinyin: "nǐ xǐ huan shén me yán sè", english: "what color do you like?" },
+        { hanzi: "我喜欢红色", pinyin: "wǒ xǐ huan hóng sè", english: "I like red" },
+        { hanzi: "你叫什么名字", pinyin: "nǐ jiào shén me míng zi", english: "what's your name?" },
+      ]},
+    ]
+  },
+  {
+    name: "Daily Life & Actions", hsk: "HSK 1-2", maxDifficulty: 1,
+    sets: [
+      { name: "Basic Verbs", words: [
+        { hanzi: "吃", pinyin: "chī", english: "to eat" },
+        { hanzi: "喝", pinyin: "hē", english: "to drink" },
+        { hanzi: "来", pinyin: "lái", english: "to come" },
+        { hanzi: "去", pinyin: "qù", english: "to go" },
+        { hanzi: "看", pinyin: "kàn", english: "to look / watch" },
+        { hanzi: "听", pinyin: "tīng", english: "to listen" },
+        { hanzi: "说", pinyin: "shuō", english: "to speak" },
+        { hanzi: "买", pinyin: "mǎi", english: "to buy" },
+      ]},
+      { name: "Food & Drink", words: [
+        { hanzi: "水", pinyin: "shuǐ", english: "water" },
+        { hanzi: "茶", pinyin: "chá", english: "tea" },
+        { hanzi: "咖啡", pinyin: "kā fēi", english: "coffee" },
+        { hanzi: "米饭", pinyin: "mǐ fàn", english: "rice" },
+        { hanzi: "面条", pinyin: "miàn tiáo", english: "noodles" },
+        { hanzi: "鸡蛋", pinyin: "jī dàn", english: "egg" },
+        { hanzi: "苹果", pinyin: "píng guǒ", english: "apple" },
+        { hanzi: "菜", pinyin: "cài", english: "dish / vegetable" },
+      ]},
+      // ===== SENTENCE SET: EATING & DRINKING =====
+      { name: "Eating & Drinking", sentence: true, words: [
+        { hanzi: "我吃饭", pinyin: "wǒ chī fàn", english: "I eat (a meal)" },
+        { hanzi: "我喝水", pinyin: "wǒ hē shuǐ", english: "I drink water" },
+        { hanzi: "他喝茶", pinyin: "tā hē chá", english: "he drinks tea" },
+        { hanzi: "我吃苹果", pinyin: "wǒ chī píng guǒ", english: "I eat an apple" },
+        { hanzi: "我喜欢吃面条", pinyin: "wǒ xǐ huan chī miàn tiáo", english: "I like eating noodles" },
+        { hanzi: "你喝咖啡吗", pinyin: "nǐ hē kā fēi ma", english: "do you drink coffee?" },
+        { hanzi: "我不喝茶", pinyin: "wǒ bù hē chá", english: "I don't drink tea" },
+        { hanzi: "我要喝水", pinyin: "wǒ yào hē shuǐ", english: "I want to drink water" },
+      ]},
+      { name: "Time Words", words: [
+        { hanzi: "今天", pinyin: "jīn tiān", english: "today" },
+        { hanzi: "明天", pinyin: "míng tiān", english: "tomorrow" },
+        { hanzi: "昨天", pinyin: "zuó tiān", english: "yesterday" },
+        { hanzi: "现在", pinyin: "xiàn zài", english: "now" },
+        { hanzi: "早上", pinyin: "zǎo shang", english: "morning" },
+        { hanzi: "晚上", pinyin: "wǎn shang", english: "evening" },
+        { hanzi: "时间", pinyin: "shí jiān", english: "time" },
+        { hanzi: "周末", pinyin: "zhōu mò", english: "weekend" },
+      ]},
+      { name: "Places", words: [
+        { hanzi: "家", pinyin: "jiā", english: "home" },
+        { hanzi: "学校", pinyin: "xué xiào", english: "school" },
+        { hanzi: "公司", pinyin: "gōng sī", english: "company" },
+        { hanzi: "饭馆", pinyin: "fàn guǎn", english: "restaurant" },
+        { hanzi: "商店", pinyin: "shāng diàn", english: "shop" },
+        { hanzi: "医院", pinyin: "yī yuàn", english: "hospital" },
+        { hanzi: "北京", pinyin: "běi jīng", english: "Beijing" },
+        { hanzi: "房间", pinyin: "fáng jiān", english: "room" },
+      ]},
+      // ===== SENTENCE SET: GOING PLACES =====
+      { name: "Going Places", sentence: true, words: [
+        { hanzi: "我去学校", pinyin: "wǒ qù xué xiào", english: "I go to school" },
+        { hanzi: "他去商店", pinyin: "tā qù shāng diàn", english: "he goes to the store" },
+        { hanzi: "我们去饭馆", pinyin: "wǒ men qù fàn guǎn", english: "we go to a restaurant" },
+        { hanzi: "你回家吗", pinyin: "nǐ huí jiā ma", english: "are you going home?" },
+        { hanzi: "我不去医院", pinyin: "wǒ bù qù yī yuàn", english: "I'm not going to the hospital" },
+        { hanzi: "你住在哪儿", pinyin: "nǐ zhù zài nǎr", english: "where do you live?" },
+        { hanzi: "我住在北京", pinyin: "wǒ zhù zài běi jīng", english: "I live in Beijing" },
+        { hanzi: "你什么时候去", pinyin: "nǐ shén me shí hou qù", english: "when are you going?" },
+      ]},
+    ]
+  },
+  {
+    name: "Practical Phrases", hsk: "HSK 1-2", maxDifficulty: 1,
+    sets: [
+      { name: "Greetings & Intros", words: [
+        { hanzi: "我叫...", pinyin: "wǒ jiào", english: "my name is..." },
+        { hanzi: "你叫什么名字", pinyin: "nǐ jiào shén me míng zi", english: "what's your name?" },
+        { hanzi: "你是哪国人", pinyin: "nǐ shì nǎ guó rén", english: "what country are you from?" },
+        { hanzi: "我来自美国", pinyin: "wǒ lái zì měi guó", english: "I'm from the USA" },
+        { hanzi: "很高兴认识你", pinyin: "hěn gāo xìng rèn shi nǐ", english: "nice to meet you" },
+        { hanzi: "你多大了", pinyin: "nǐ duō dà le", english: "how old are you?" },
+        { hanzi: "早上好", pinyin: "zǎo shang hǎo", english: "good morning" },
+        { hanzi: "晚安", pinyin: "wǎn ān", english: "good night" },
+      ]},
+      { name: "At a Restaurant", words: [
+        { hanzi: "我要这个", pinyin: "wǒ yào zhè ge", english: "I want this" },
+        { hanzi: "菜单", pinyin: "cài dān", english: "menu" },
+        { hanzi: "点菜", pinyin: "diǎn cài", english: "to order food" },
+        { hanzi: "好吃", pinyin: "hǎo chī", english: "delicious" },
+        { hanzi: "买单", pinyin: "mǎi dān", english: "the bill" },
+        { hanzi: "服务员", pinyin: "fú wù yuán", english: "waiter/waitress" },
+        { hanzi: "一杯水", pinyin: "yī bēi shuǐ", english: "a glass of water" },
+        { hanzi: "好吃极了", pinyin: "hǎo chī jí le", english: "absolutely delicious" },
+      ]},
+      // ===== SENTENCE SET: AT A RESTAURANT =====
+      { name: "Ordering Food", sentence: true, words: [
+        { hanzi: "我要一杯咖啡", pinyin: "wǒ yào yī bēi kā fēi", english: "I want a coffee" },
+        { hanzi: "我要点菜", pinyin: "wǒ yào diǎn cài", english: "I want to order" },
+        { hanzi: "这个菜很好吃", pinyin: "zhè ge cài hěn hǎo chī", english: "this dish is delicious" },
+        { hanzi: "请给我菜单", pinyin: "qǐng gěi wǒ cài dān", english: "please give me the menu" },
+        { hanzi: "我想吃面条", pinyin: "wǒ xiǎng chī miàn tiáo", english: "I want to eat noodles" },
+        { hanzi: "我们买单", pinyin: "wǒ men mǎi dān", english: "let's pay the bill" },
+        { hanzi: "服务员，请过来", pinyin: "fú wù yuán qǐng guò lái", english: "waiter, please come here" },
+        { hanzi: "太贵了", pinyin: "tài guì le", english: "too expensive" },
+      ]},
+      { name: "Shopping", words: [
+        { hanzi: "多少钱", pinyin: "duō shao qián", english: "how much money?" },
+        { hanzi: "太贵了", pinyin: "tài guì le", english: "too expensive" },
+        { hanzi: "便宜点吧", pinyin: "pián yi diǎn ba", english: "cheaper please" },
+        { hanzi: "钱", pinyin: "qián", english: "money" },
+        { hanzi: "块", pinyin: "kuài", english: "yuan (spoken)" },
+        { hanzi: "买东西", pinyin: "mǎi dōng xi", english: "to buy things" },
+        { hanzi: "我要买", pinyin: "wǒ yào mǎi", english: "I want to buy" },
+        { hanzi: "信用卡", pinyin: "xìn yòng kǎ", english: "credit card" },
+      ]},
+      { name: "Directions & Places", words: [
+        { hanzi: "洗手间在哪", pinyin: "xǐ shǒu jiān zài nǎr", english: "where's the bathroom?" },
+        { hanzi: "你在哪儿", pinyin: "nǐ zài nǎr", english: "where are you?" },
+        { hanzi: "怎么走", pinyin: "zěn me zǒu", english: "which way?" },
+        { hanzi: "左边", pinyin: "zuǒ bian", english: "left side" },
+        { hanzi: "右边", pinyin: "yòu bian", english: "right side" },
+        { hanzi: "前面", pinyin: "qián miàn", english: "in front" },
+        { hanzi: "后面", pinyin: "hòu miàn", english: "behind" },
+        { hanzi: "附近", pinyin: "fù jìn", english: "nearby" },
+      ]},
+      // ===== SENTENCE SET: ASKING FOR DIRECTIONS =====
+      { name: "Asking for Directions", sentence: true, words: [
+        { hanzi: "洗手间在哪儿", pinyin: "xǐ shǒu jiān zài nǎr", english: "where is the bathroom?" },
+        { hanzi: "请问怎么走", pinyin: "qǐng wèn zěn me zǒu", english: "excuse me, which way?" },
+        { hanzi: "在前面", pinyin: "zài qián miàn", english: "it's in front" },
+        { hanzi: "在左边", pinyin: "zài zuǒ bian", english: "it's on the left" },
+        { hanzi: "在右边", pinyin: "zài yòu bian", english: "it's on the right" },
+        { hanzi: "在附近", pinyin: "zài fù jìn", english: "it's nearby" },
+        { hanzi: "在那儿", pinyin: "zài nàr", english: "it's over there" },
+        { hanzi: "我不认识路", pinyin: "wǒ bù rèn shi lù", english: "I don't know the way" },
+      ]},
+      { name: "Useful Requests", words: [
+        { hanzi: "请再说一遍", pinyin: "qǐng zài shuō yī biàn", english: "please say again" },
+        { hanzi: "请慢一点说", pinyin: "qǐng màn yī diǎn shuō", english: "please speak slower" },
+        { hanzi: "我不明白", pinyin: "wǒ bù míng bai", english: "I don't understand" },
+        { hanzi: "我听不懂", pinyin: "wǒ tīng bù dǒng", english: "I don't understand by ear" },
+        { hanzi: "你会说英文吗", pinyin: "nǐ huì shuō yīng wén ma", english: "can you speak English?" },
+        { hanzi: "这是什么", pinyin: "zhè shì shén me", english: "what is this?" },
+        { hanzi: "你能帮我吗", pinyin: "nǐ néng bāng wǒ ma", english: "can you help me?" },
+        { hanzi: "请等一下", pinyin: "qǐng děng yī xià", english: "please wait a moment" },
+      ]},
+    ]
+  },
+  {
+    name: "Common Verbs & Ideas", hsk: "HSK 2", maxDifficulty: 1,
+    sets: [
+      { name: "Thinking & Feeling", words: [
+        { hanzi: "觉得", pinyin: "jué de", english: "to feel / think" },
+        { hanzi: "希望", pinyin: "xī wàng", english: "to hope" },
+        { hanzi: "喜欢", pinyin: "xǐ huan", english: "to like" },
+        { hanzi: "爱", pinyin: "ài", english: "to love" },
+        { hanzi: "想", pinyin: "xiǎng", english: "to want / think" },
+        { hanzi: "知道", pinyin: "zhī dào", english: "to know" },
+        { hanzi: "认识", pinyin: "rèn shi", english: "to know (a person)" },
+        { hanzi: "相信", pinyin: "xiāng xìn", english: "to believe" },
+      ]},
+      { name: "Abilities & Obligations", words: [
+        { hanzi: "会", pinyin: "huì", english: "can / know how to" },
+        { hanzi: "能", pinyin: "néng", english: "can / be capable" },
+        { hanzi: "可以", pinyin: "kě yǐ", english: "may / can" },
+        { hanzi: "应该", pinyin: "yīng gāi", english: "should" },
+        { hanzi: "必须", pinyin: "bì xū", english: "must" },
+        { hanzi: "需要", pinyin: "xū yào", english: "to need" },
+        { hanzi: "要", pinyin: "yào", english: "to want / will" },
+        { hanzi: "不用", pinyin: "bú yòng", english: "no need to" },
+      ]},
+      { name: "Actions", words: [
+        { hanzi: "做", pinyin: "zuò", english: "to do / make" },
+        { hanzi: "给", pinyin: "gěi", english: "to give" },
+        { hanzi: "找", pinyin: "zhǎo", english: "to look for" },
+        { hanzi: "帮助", pinyin: "bāng zhù", english: "to help" },
+        { hanzi: "开始", pinyin: "kāi shǐ", english: "to start" },
+        { hanzi: "结束", pinyin: "jié shù", english: "to end" },
+        { hanzi: "工作", pinyin: "gōng zuò", english: "to work" },
+        { hanzi: "学习", pinyin: "xué xí", english: "to study" },
+      ]},
+      { name: "Connectors", words: [
+        { hanzi: "因为", pinyin: "yīn wèi", english: "because" },
+        { hanzi: "所以", pinyin: "suǒ yǐ", english: "therefore" },
+        { hanzi: "但是", pinyin: "dàn shì", english: "but" },
+        { hanzi: "还有", pinyin: "hái yǒu", english: "and also" },
+        { hanzi: "然后", pinyin: "rán hòu", english: "then / after that" },
+        { hanzi: "如果", pinyin: "rú guǒ", english: "if" },
+        { hanzi: "虽然", pinyin: "suī rán", english: "although" },
+        { hanzi: "可是", pinyin: "kě shì", english: "but / however" },
+      ]},
+      // ===== SENTENCE SET: USING CONNECTORS =====
+      { name: "Because & But", sentence: true, words: [
+        { hanzi: "我喜欢中文，可是很难", pinyin: "wǒ xǐ huan zhōng wén kě shì hěn nán", english: "I like Chinese, but it's hard" },
+        { hanzi: "因为下雨，所以我不去", pinyin: "yīn wèi xià yǔ suǒ yǐ wǒ bù qù", english: "because it's raining, I'm not going" },
+        { hanzi: "他很累，但是还在工作", pinyin: "tā hěn lèi dàn shì hái zài gōng zuò", english: "he's tired but still working" },
+        { hanzi: "我喝茶，然后吃饭", pinyin: "wǒ hē chá rán hòu chī fàn", english: "I drink tea, then eat" },
+        { hanzi: "如果下雨，我们不去", pinyin: "rú guǒ xià yǔ wǒ men bù qù", english: "if it rains, we're not going" },
+        { hanzi: "虽然很贵，但是我要买", pinyin: "suī rán hěn guì dàn shì wǒ yào mǎi", english: "although it's expensive, I want to buy it" },
+        { hanzi: "我想学中文", pinyin: "wǒ xiǎng xué zhōng wén", english: "I want to learn Chinese" },
+        { hanzi: "我会说一点中文", pinyin: "wǒ huì shuō yī diǎn zhōng wén", english: "I can speak a little Chinese" },
+      ]},
+      { name: "Time & Frequency", words: [
+        { hanzi: "已经", pinyin: "yǐ jīng", english: "already" },
+        { hanzi: "常常", pinyin: "cháng cháng", english: "often" },
+        { hanzi: "总是", pinyin: "zǒng shì", english: "always" },
+        { hanzi: "有时候", pinyin: "yǒu shí hou", english: "sometimes" },
+        { hanzi: "从不", pinyin: "cóng bù", english: "never" },
+        { hanzi: "刚才", pinyin: "gāng cái", english: "just now" },
+        { hanzi: "马上", pinyin: "mǎ shàng", english: "immediately" },
+        { hanzi: "最近", pinyin: "zuì jìn", english: "recently" },
+      ]},
+    ]
+  },
+  {
+    name: "Descriptions & Feelings", hsk: "HSK 2-3", maxDifficulty: 2,
+    sets: [
+      { name: "Emotions", words: [
+        { hanzi: "高兴", pinyin: "gāo xìng", english: "happy" },
+        { hanzi: "难过", pinyin: "nán guò", english: "sad" },
+        { hanzi: "生气", pinyin: "shēng qì", english: "angry" },
+        { hanzi: "担心", pinyin: "dān xīn", english: "to worry" },
+        { hanzi: "着急", pinyin: "zháo jí", english: "anxious" },
+        { hanzi: "满意", pinyin: "mǎn yì", english: "satisfied" },
+        { hanzi: "无聊", pinyin: "wú liáo", english: "bored" },
+        { hanzi: "累", pinyin: "lèi", english: "tired" },
+      ]},
+      { name: "Personality", words: [
+        { hanzi: "认真", pinyin: "rèn zhēn", english: "serious / earnest" },
+        { hanzi: "努力", pinyin: "nǔ lì", english: "hardworking" },
+        { hanzi: "聪明", pinyin: "cōng ming", english: "smart" },
+        { hanzi: "诚实", pinyin: "chéng shí", english: "honest" },
+        { hanzi: "友好", pinyin: "yǒu hǎo", english: "friendly" },
+        { hanzi: "幽默", pinyin: "yōu mò", english: "humorous" },
+        { hanzi: "安静", pinyin: "ān jìng", english: "quiet" },
+        { hanzi: "热情", pinyin: "rè qíng", english: "warm" },
+      ]},
+      // ===== SENTENCE SET: FEELINGS =====
+      { name: "Talking About Feelings", sentence: true, words: [
+        { hanzi: "我很高兴", pinyin: "wǒ hěn gāo xìng", english: "I'm very happy" },
+        { hanzi: "我很难过", pinyin: "wǒ hěn nán guò", english: "I'm very sad" },
+        { hanzi: "他有点着急", pinyin: "tā yǒu diǎn zháo jí", english: "he's a little anxious" },
+        { hanzi: "你累了吗", pinyin: "nǐ lèi le ma", english: "are you tired?" },
+        { hanzi: "我有点无聊", pinyin: "wǒ yǒu diǎn wú liáo", english: "I'm a bit bored" },
+        { hanzi: "我很喜欢这本书", pinyin: "wǒ hěn xǐ huan zhè běn shū", english: "I really like this book" },
+        { hanzi: "他很聪明，也很努力", pinyin: "tā hěn cōng ming yě hěn nǔ lì", english: "he's smart and hardworking" },
+        { hanzi: "我不太高兴", pinyin: "wǒ bú tài gāo xìng", english: "I'm not very happy" },
+      ]},
+      { name: "Weather & Nature", words: [
+        { hanzi: "天气", pinyin: "tiān qì", english: "weather" },
+        { hanzi: "下雨", pinyin: "xià yǔ", english: "to rain" },
+        { hanzi: "下雪", pinyin: "xià xuě", english: "to snow" },
+        { hanzi: "太阳", pinyin: "tài yáng", english: "sun" },
+        { hanzi: "刮风", pinyin: "guā fēng", english: "windy" },
+        { hanzi: "冷", pinyin: "lěng", english: "cold" },
+        { hanzi: "热", pinyin: "rè", english: "hot" },
+        { hanzi: "暖和", pinyin: "nuǎn huo", english: "warm" },
+      ]},
+      { name: "Food & Taste", words: [
+        { hanzi: "甜", pinyin: "tián", english: "sweet" },
+        { hanzi: "酸", pinyin: "suān", english: "sour" },
+        { hanzi: "苦", pinyin: "kǔ", english: "bitter" },
+        { hanzi: "辣", pinyin: "là", english: "spicy" },
+        { hanzi: "咸", pinyin: "xián", english: "salty" },
+        { hanzi: "味道", pinyin: "wèi dào", english: "taste" },
+        { hanzi: "新鲜", pinyin: "xīn xiān", english: "fresh" },
+        { hanzi: "好吃", pinyin: "hǎo chī", english: "tasty" },
+      ]},
+      { name: "Money & Numbers", words: [
+        { hanzi: "价格", pinyin: "jià gé", english: "price" },
+        { hanzi: "贵", pinyin: "guì", english: "expensive" },
+        { hanzi: "免费", pinyin: "miǎn fèi", english: "free" },
+        { hanzi: "一百", pinyin: "yī bǎi", english: "one hundred" },
+        { hanzi: "一千", pinyin: "yī qiān", english: "one thousand" },
+        { hanzi: "第一", pinyin: "dì yī", english: "first" },
+        { hanzi: "第二", pinyin: "dì èr", english: "second" },
+        { hanzi: "一半", pinyin: "yī bàn", english: "half" },
+      ]},
+    ]
+  },
+  {
+    name: "Practical Conversations", hsk: "HSK 2-3", maxDifficulty: 2,
+    sets: [
+      { name: "Daily Sentences", sentence: true, words: [
+        { hanzi: "今天天气很好", pinyin: "jīn tiān tiān qì hěn hǎo", english: "the weather is nice today" },
+        { hanzi: "我正在学中文", pinyin: "wǒ zhèng zài xué zhōng wén", english: "I'm learning Chinese" },
+        { hanzi: "你住在哪儿", pinyin: "nǐ zhù zài nǎr", english: "where do you live?" },
+        { hanzi: "我住在北京", pinyin: "wǒ zhù zài běi jīng", english: "I live in Beijing" },
+        { hanzi: "我每天七点起床", pinyin: "wǒ měi tiān qī diǎn qǐ chuáng", english: "I get up at 7 daily" },
+        { hanzi: "你喜欢什么运动", pinyin: "nǐ xǐ huan shén me yùn dòng", english: "what sports do you like?" },
+        { hanzi: "你什么时候有空", pinyin: "nǐ shén me shí hou yǒu kòng", english: "when are you free?" },
+        { hanzi: "我周末想去爬山", pinyin: "wǒ zhōu mò xiǎng qù pá shān", english: "I want to hike this weekend" },
+      ]},
+      { name: "At Home", sentence: true, words: [
+        { hanzi: "请你把门关上", pinyin: "qǐng nǐ bǎ mén guān shàng", english: "please close the door" },
+        { hanzi: "我在看电视", pinyin: "wǒ zài kàn diàn shì", english: "I'm watching TV" },
+        { hanzi: "我做了饭", pinyin: "wǒ zuò le fàn", english: "I cooked" },
+        { hanzi: "房间很干净", pinyin: "fáng jiān hěn gān jìng", english: "the room is clean" },
+        { hanzi: "洗衣机坏了", pinyin: "xǐ yī jī huài le", english: "the washing machine broke" },
+        { hanzi: "请帮我一个忙", pinyin: "qǐng bāng wǒ yī gè máng", english: "please do me a favor" },
+        { hanzi: "我们下午再讨论", pinyin: "wǒ men xià wǔ zài tǎo lùn", english: "let's discuss in the afternoon" },
+        { hanzi: "我要睡了", pinyin: "wǒ yào shuì le", english: "I'm going to sleep" },
+      ]},
+      { name: "Travel", words: [
+        { hanzi: "我下个月要去中国", pinyin: "wǒ xià gè yuè yào qù zhōng guó", english: "I'm going to China next month" },
+        { hanzi: "机票", pinyin: "jī piào", english: "plane ticket" },
+        { hanzi: "火车站", pinyin: "huǒ chē zhàn", english: "train station" },
+        { hanzi: "酒店", pinyin: "jiǔ diàn", english: "hotel" },
+        { hanzi: "护照", pinyin: "hù zhào", english: "passport" },
+        { hanzi: "行李箱", pinyin: "xíng li xiāng", english: "suitcase" },
+        { hanzi: "打车", pinyin: "dǎ chē", english: "to hail a taxi" },
+        { hanzi: "旅游", pinyin: "lǚ yóu", english: "to travel" },
+      ]},
+      { name: "Social", words: [
+        { hanzi: "我请客", pinyin: "wǒ qǐng kè", english: "it's my treat" },
+        { hanzi: "一起吃饭吧", pinyin: "yī qǐ chī fàn ba", english: "let's eat together" },
+        { hanzi: "我们去看电影", pinyin: "wǒ men qù kàn diàn yǐng", english: "let's go see a movie" },
+        { hanzi: "生日快乐", pinyin: "shēng rì kuài lè", english: "happy birthday" },
+        { hanzi: "恭喜你", pinyin: "gōng xǐ nǐ", english: "congratulations" },
+        { hanzi: "新年快乐", pinyin: "xīn nián kuài lè", english: "happy new year" },
+        { hanzi: "干杯", pinyin: "gān bēi", english: "cheers" },
+        { hanzi: "加油", pinyin: "jiā yóu", english: "you can do it!" },
+      ]},
+      { name: "Opinions", sentence: true, words: [
+        { hanzi: "你觉得怎么样", pinyin: "nǐ jué de zěn me yàng", english: "what do you think?" },
+        { hanzi: "我觉得这个主意很好", pinyin: "wǒ jué de zhè ge zhǔ yi hěn hǎo", english: "I think this idea is great" },
+        { hanzi: "我不同意", pinyin: "wǒ bù tóng yì", english: "I disagree" },
+        { hanzi: "我也这么想", pinyin: "wǒ yě zhè me xiǎng", english: "I think so too" },
+        { hanzi: "真的吗", pinyin: "zhēn de ma", english: "really?" },
+        { hanzi: "你说得对", pinyin: "nǐ shuō de duì", english: "you're right" },
+        { hanzi: "这本书很有意思", pinyin: "zhè běn shū hěn yǒu yì si", english: "this book is interesting" },
+        { hanzi: "我对中国文化很感兴趣", pinyin: "wǒ duì zhōng guó wén huà hěn gǎn xìng qù", english: "I'm interested in Chinese culture" },
+      ]},
+    ]
+  },
+  {
+    name: "Advanced Expressions", hsk: "HSK 3-4", maxDifficulty: 2,
+    sets: [
+      { name: "Complex Verbs", words: [
+        { hanzi: "发现", pinyin: "fā xiàn", english: "to discover" },
+        { hanzi: "决定", pinyin: "jué dìng", english: "to decide" },
+        { hanzi: "解决", pinyin: "jiě jué", english: "to solve" },
+        { hanzi: "影响", pinyin: "yǐng xiǎng", english: "to influence" },
+        { hanzi: "改变", pinyin: "gǎi biàn", english: "to change" },
+        { hanzi: "提高", pinyin: "tí gāo", english: "to improve" },
+        { hanzi: "坚持", pinyin: "jiān chí", english: "to persist" },
+        { hanzi: "放弃", pinyin: "fàng qì", english: "to give up" },
+      ]},
+      { name: "Abstract Nouns", words: [
+        { hanzi: "经验", pinyin: "jīng yàn", english: "experience" },
+        { hanzi: "结果", pinyin: "jié guǒ", english: "result" },
+        { hanzi: "原因", pinyin: "yuán yīn", english: "reason" },
+        { hanzi: "目标", pinyin: "mù biāo", english: "goal" },
+        { hanzi: "机会", pinyin: "jī huì", english: "opportunity" },
+        { hanzi: "责任", pinyin: "zé rèn", english: "responsibility" },
+        { hanzi: "态度", pinyin: "tài du", english: "attitude" },
+        { hanzi: "能力", pinyin: "néng lì", english: "ability" },
+      ]},
+      { name: "Communication", words: [
+        { hanzi: "讨论", pinyin: "tǎo lùn", english: "to discuss" },
+        { hanzi: "表达", pinyin: "biǎo dá", english: "to express" },
+        { hanzi: "解释", pinyin: "jiě shì", english: "to explain" },
+        { hanzi: "介绍", pinyin: "jiè shào", english: "to introduce" },
+        { hanzi: "交流", pinyin: "jiāo liú", english: "to communicate" },
+        { hanzi: "建议", pinyin: "jiàn yì", english: "to suggest" },
+        { hanzi: "理解", pinyin: "lǐ jiě", english: "to understand" },
+        { hanzi: "同意", pinyin: "tóng yì", english: "to agree" },
+      ]},
+      { name: "Abstract Sentences", sentence: true, words: [
+        { hanzi: "虽然下雨，但是我还是去了", pinyin: "suī rán xià yǔ dàn shì wǒ hái shi qù le", english: "although it rained, I still went" },
+        { hanzi: "因为太忙，所以没去", pinyin: "yīn wèi tài máng suǒ yǐ méi qù", english: "because I was busy, I didn't go" },
+        { hanzi: "你能帮我一个忙吗", pinyin: "nǐ néng bāng wǒ yī gè máng ma", english: "can you do me a favor?" },
+        { hanzi: "我已经吃过饭了", pinyin: "wǒ yǐ jīng chī guo fàn le", english: "I've already eaten" },
+        { hanzi: "我们应该早点出发", pinyin: "wǒ men yīng gāi zǎo diǎn chū fā", english: "we should leave earlier" },
+        { hanzi: "这个字怎么读", pinyin: "zhè ge zì zěn me dú", english: "how do you read this character?" },
+        { hanzi: "他比我高一点", pinyin: "tā bǐ wǒ gāo yī diǎn", english: "he's a bit taller than me" },
+        { hanzi: "他说的中文很流利", pinyin: "tā shuō de zhōng wén hěn liú lì", english: "his Chinese is fluent" },
+      ]},
+      { name: "Life & Study", words: [
+        { hanzi: "习惯", pinyin: "xí guàn", english: "habit / be used to" },
+        { hanzi: "压力", pinyin: "yā lì", english: "pressure / stress" },
+        { hanzi: "健康", pinyin: "jiàn kāng", english: "health" },
+        { hanzi: "运动", pinyin: "yùn dòng", english: "exercise" },
+        { hanzi: "进步", pinyin: "jìn bù", english: "progress" },
+        { hanzi: "成功", pinyin: "chéng gōng", english: "success" },
+        { hanzi: "失败", pinyin: "shī bài", english: "failure" },
+        { hanzi: "复习", pinyin: "fù xí", english: "to review" },
+      ]},
+    ]
+  },
+];
+
+/* =========================================================
+   DIFFICULTY — now controls content ceiling AND combat pressure
+   ========================================================= */
+const DIFFICULTY = {
+  easy:   { enemyInterval: 12000, playerDamageBase: 10, enemyDamage: 5,  enemyHeal: 3,  maxLevelIndex: 3 },
+  normal: { enemyInterval: 7000,  playerDamageBase: 8,  enemyDamage: 7,  enemyHeal: 5,  maxLevelIndex: 6 },
+  hard:   { enemyInterval: 4000,  playerDamageBase: 7,  enemyDamage: 10, enemyHeal: 6,  maxLevelIndex: 7 },
+};
+
+const ENEMIES = [
+  { sprite: "👹", name: "ONI 鬼" },
+  { sprite: "😈", name: "DEMON 恶魔" },
+  { sprite: "🐲", name: "DRAGON 龙" },
+  { sprite: "👺", name: "TENGU 天狗" },
+  { sprite: "🧟", name: "JIANG SHI 僵尸" },
+  { sprite: "🦹", name: "EMPEROR 皇帝" },
+  { sprite: "🥷", name: "NINJA 忍者" },
+  { sprite: "🐉", name: "DRAGON LORD 龙王" },
+];
+
+/* =========================================================
+   STATE
+   ========================================================= */
+let state = {
+  difficulty: "easy",
+  playerHP: 100, enemyHP: 100,
+  combo: 0, bestCombo: 0, score: 0,
+  setIndex: 0, levelIndex: 0,
+  setWords: [], fightQueue: [], currentQuestion: null,
+  answering: false, paused: false, muted: false,
+  toneStrict: true, autoSpeak: true, speakOnAnswer: true,
+  enemyTimer: null, reviewedCount: 0,
+  totalCorrect: 0, totalWrong: 0,
+  selectedVoiceURI: '', voiceRate: 0.85,
+  lessonStep: 0, learnCardIndex: 0,
+  recognizeIndex: 0, recognizeCorrect: 0,
+  produceIndex: 0, produceCorrect: 0,
+  lastFightWon: false,
+};
+
+/* =========================================================
+   AUDIO
+   ========================================================= */
+let chineseVoices = [];
+function refreshVoices() {
+  if (typeof speechSynthesis === 'undefined') return;
+  chineseVoices = speechSynthesis.getVoices().filter(v =>
+    v.lang && v.lang.toLowerCase().startsWith('zh'));
+  const sel = document.getElementById('voiceSelect');
+  if (!sel) return;
+  if (chineseVoices.length === 0) {
+    sel.innerHTML = '<option value="">No Mandarin voice found</option>';
+    const warn = document.getElementById('audioWarning');
+    if (warn) { warn.style.display = 'block';
+      warn.innerHTML = `⚠️ <b>No Mandarin voice detected.</b> Game still works — you just won't hear audio. To fix: Chrome/Edge often has one built in. Windows: Settings → Time & Language → Speech → Add voices → Chinese. Mac: System Settings → Accessibility → Spoken Content → System Voice → add Ting-Ting.`; }
+    return;
+  }
+  const warn = document.getElementById('audioWarning');
+  if (warn) warn.style.display = 'none';
+  sel.innerHTML = chineseVoices.map(v =>
+    `<option value="${v.voiceURI}">${v.name} (${v.lang})</option>`).join('');
+  const preferred = chineseVoices.find(v => /female|woman|女|ting|yaoyao|huihui/i.test(v.name))
+                 || chineseVoices[0];
+  state.selectedVoiceURI = preferred.voiceURI;
+  sel.value = preferred.voiceURI;
+  sel.onchange = () => { state.selectedVoiceURI = sel.value; };
+}
+if (typeof speechSynthesis !== 'undefined') {
+  speechSynthesis.onvoiceschanged = refreshVoices;
+  refreshVoices();
+  setTimeout(refreshVoices, 300);
+  setTimeout(refreshVoices, 1000);
+}
+function getSelectedVoice() {
+  if (!state.selectedVoiceURI) return null;
+  return chineseVoices.find(v => v.voiceURI === state.selectedVoiceURI) || null;
+}
+function speakText(text) {
+  if (state.muted || !state.autoSpeak || typeof speechSynthesis === 'undefined') return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'zh-CN'; u.rate = state.voiceRate;
+    const v = getSelectedVoice(); if (v) u.voice = v;
+    speechSynthesis.speak(u);
+  } catch {}
+}
+function speakInline(text) {
+  if (state.muted || typeof speechSynthesis === 'undefined') return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'zh-CN'; u.rate = state.voiceRate;
+    const v = getSelectedVoice(); if (v) u.voice = v;
+    speechSynthesis.speak(u);
+  } catch {}
+}
+function testVoice() { speakInline('你好，欢迎来到中文猛击。'); }
+
+/* =========================================================
+   PERSISTENT PROGRESS
+   ========================================================= */
+const STORAGE_KEY = 'mandarin_mashers_v2';
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return { unlocked: { "0-0": true }, completed: {}, srs: {}, stats: {} };
+    return JSON.parse(raw);
+  } catch { return { unlocked: { "0-0": true }, completed: {}, srs: {}, stats: {} }; }
+}
+function saveProgress() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(progress)); } catch {}
+  if (window.saveMyData) {
+    window.saveMyData(progress);
+}
+let progress = loadProgress();
+if (!progress.unlocked) progress.unlocked = { "0-0": true };
+if (!progress.completed) progress.completed = {};
+if (!progress.srs) progress.srs = {};
+if (!progress.stats) progress.stats = {};
+
+function setKey(li, si) { return li + "-" + si; }
+function isSetUnlocked(li, si) { return !!progress.unlocked[setKey(li, si)]; }
+function isSetCompleted(li, si) { return !!progress.completed[setKey(li, si)]; }
+function unlockSet(li, si) { progress.unlocked[setKey(li, si)] = true; saveProgress(); }
+function completeSet(li, si) { progress.completed[setKey(li, si)] = true; unlockNext(li, si); saveProgress(); }
+function unlockNext(li, si) {
+  const level = CURRICULUM[li];
+  if (si + 1 < level.sets.length) {
+    progress.unlocked[setKey(li, si + 1)] = true;
+  } else if (li + 1 < CURRICULUM.length) {
+    progress.unlocked[setKey(li + 1, 0)] = true;
+  }
+}
+function setMastery(li, si) {
+  const words = CURRICULUM[li].sets[si].words;
+  if (!words.length) return 0;
+  let known = 0;
+  for (const w of words) {
+    const st = progress.stats[w.hanzi];
+    if (st && st.correct > 0) known++;
+  }
+  return Math.round(100 * known / words.length);
+}
+function getStats(h) { if (!progress.stats[h]) progress.stats[h] = { correct: 0, wrong: 0 }; return progress.stats[h]; }
+function getSRSCard(h) { if (!progress.srs[h]) progress.srs[h] = { ease: 2.5, interval: 0, due: 0, reps: 0 }; return progress.srs[h]; }
+function updateSRS(h, correct) {
+  const c = getSRSCard(h), st = getStats(h), now = Date.now(), DAY = 86400000;
+  if (correct) {
+    st.correct++; c.reps++;
+    if (c.interval === 0) c.interval = 1;
+    else if (c.interval === 1) c.interval = 3;
+    else c.interval = Math.round(c.interval * c.ease);
+    c.ease = Math.min(c.ease + 0.1, 3.0);
+    c.due = now + c.interval * DAY;
+  } else {
+    st.wrong++; c.reps = 0; c.interval = 0;
+    c.ease = Math.max(c.ease - 0.2, 1.3);
+    c.due = now + 60000;
+  }
+  saveProgress();
+}
+function countDue() {
+  const now = Date.now(); let n = 0;
+  for (const k in progress.srs) if (progress.srs[k].due <= now) n++;
+  return n;
+}
+
+/* =========================================================
+   PINYIN NORMALIZATION
+   ========================================================= */
+const TONE_MAP = {
+  'ā':'a1','á':'a2','ǎ':'a3','à':'a4',
+  'ē':'e1','é':'e2','ě':'e3','è':'e4',
+  'ī':'i1','í':'i2','ǐ':'i3','ì':'i4',
+  'ō':'o1','ó':'o2','ǒ':'o3','ò':'o4',
+  'ū':'u1','ú':'u2','ǔ':'u3','ù':'u4',
+  'ǖ':'v1','ǘ':'v2','ǚ':'v3','ǜ':'v4','ü':'v',
+  'ń':'n2','ň':'n3','ǹ':'n4',
+};
+function normalizeStrict(s) {
+  let out = ''; s = s.toLowerCase().trim();
+  for (const ch of s) {
+    if (TONE_MAP[ch]) out += TONE_MAP[ch];
+    else if (/\s/.test(ch)) continue;
+    else out += ch;
+  }
+  return out;
+}
+function normalizeLenient(s) {
+  let out = ''; s = s.toLowerCase().trim();
+  for (const ch of s) {
+    const m = TONE_MAP[ch];
+    if (m) out += m.replace(/\d/g, '');
+    else if (/[\s0-9]/.test(ch)) continue;
+    else out += ch;
+  }
+  return out;
+}
+function answersMatch(userInput, correctPinyin, strict) {
+  if (!userInput) return false;
+  if (strict) return normalizeStrict(userInput) === normalizeStrict(correctPinyin);
+  return normalizeLenient(userInput) === normalizeLenient(correctPinyin);
+}
+
+/* =========================================================
+   SCREENS
+   ========================================================= */
+const ALL_SCREENS = ['titleScreen','mapScreen','lessonScreen','gameScreen',
+                     'endScreen','tutorialScreen','statsScreen'];
+function showScreen(id) {
+  ALL_SCREENS.forEach(s => document.getElementById(s).style.display = 'none');
+  document.getElementById(id).style.display = 'block';
+  if (id !== 'gameScreen') clearTimeout(state.enemyTimer);
+}
+function backToTitle() {
+  clearTimeout(state.enemyTimer);
+  showScreen('titleScreen');
+}
+
+/* =========================================================
+   MAP — respects difficulty ceiling
+   ========================================================= */
+function showMap() {
+  clearTimeout(state.enemyTimer);
+  showScreen('mapScreen');
+  const maxLevel = DIFFICULTY[state.difficulty].maxLevelIndex;
+  const diffName = state.difficulty.charAt(0).toUpperCase() + state.difficulty.slice(1);
+
+  document.getElementById('mapDifficultyNote').innerHTML =
+    `<b>${diffName}</b> difficulty · showing <b>Levels 1–${maxLevel + 1}</b>. ` +
+    (maxLevel < CURRICULUM.length - 1
+      ? `Later levels unlock if you switch difficulty on the title screen.`
+      : `All levels available.`);
+
+  document.getElementById('mapContent').innerHTML = CURRICULUM.map((level, li) => {
+    const aboveDifficulty = li > maxLevel;
+    const levelLocked = !level.sets.some((_, si) => isSetUnlocked(li, si));
+    const setsHtml = level.sets.map((set, si) => {
+      const unlocked = isSetUnlocked(li, si) && !aboveDifficulty;
+      const completed = isSetCompleted(li, si);
+      const mastery = setMastery(li, si);
+      const sample = set.words.slice(0, 3).map(w => w.hanzi).join(' · ');
+      let statusClass = 'lock', statusText = '🔒 Locked';
+      if (completed) { statusClass = 'done'; statusText = '✓ Completed'; }
+      else if (unlocked) { statusClass = 'ready'; statusText = '▶ Ready'; }
+      const classes = [
+        'set-card',
+        unlocked ? '' : 'locked-set',
+        completed ? 'completed' : '',
+        set.sentence ? 'sentence-set' : '',
+      ].join(' ');
+      return `
+        <div class="${classes}"
+             onclick="${unlocked ? `startLesson(${li}, ${si})` : ''}">
+          <div class="set-num">Set ${si + 1}${set.sentence ? ' · sentences' : ''}</div>
+          <div class="set-name">${set.name}</div>
+          <div class="set-sample">${sample}...</div>
+          <div class="mastery-bar"><div class="mastery-fill" style="width:${mastery}%"></div></div>
+          <div class="set-status ${statusClass}">${statusText} · ${mastery}%</div>
+        </div>`;
+    }).join('');
+    return `
+      <div class="level-block ${levelLocked ? 'locked' : ''} ${aboveDifficulty ? 'above-difficulty' : ''}">
+        <div class="level-title">
+          <h3>${level.name}<span class="hsk-tag">${level.hsk}</span></h3>
+          <div class="level-progress">${level.sets.filter((_, si) => isSetCompleted(li, si)).length}/${level.sets.length} completed</div>
+        </div>
+        ${aboveDifficulty ? `<div class="diff-warn">⚠️ Above ${diffName} difficulty — switch on title screen to play</div>` : ''}
+        <div class="sets-grid">${setsHtml}</div>
+      </div>`;
+  }).join('');
+}
+
+/* =========================================================
+   LESSON FLOW
+   ========================================================= */
+function startLesson(li, si) {
+  state.levelIndex = li;
+  state.setIndex = si;
+  state.setWords = CURRICULUM[li].sets[si].words.slice();
+  state.lessonStep = 0;
+  state.learnCardIndex = 0;
+  state.recognizeIndex = 0;
+  state.recognizeCorrect = 0;
+  state.produceIndex = 0;
+  state.produceCorrect = 0;
+  showScreen('lessonScreen');
+  renderLesson();
+}
+
+function renderLesson() {
+  const level = CURRICULUM[state.levelIndex];
+  const set = level.sets[state.setIndex];
+  document.getElementById('lessonTitle').textContent =
+    `${level.name} · Set ${state.setIndex + 1}: ${set.name}`;
+
+  const steps = ['Learn', 'Recognize', 'Produce', 'Fight'];
+  document.getElementById('lessonPills').innerHTML = steps.map((s, i) => {
+    let cls = 'step-pill';
+    if (i < state.lessonStep) cls += ' done';
+    if (i === state.lessonStep) cls += ' active';
+    return `<div class="${cls}">${i + 1}. ${s}</div>`;
+  }).join('');
+
+  if (state.lessonStep === 0) renderLearnPhase();
+  else if (state.lessonStep === 1) renderRecognizePhase();
+  else if (state.lessonStep === 2) renderProducePhase();
+  else if (state.lessonStep === 3) renderReadyToFight();
+}
+
+function isSentenceWord(w) {
+  return w.hanzi.length >= 5 && !w.hanzi.includes('...');
+}
+
+function renderLearnPhase() {
+  const words = state.setWords;
+  const i = state.learnCardIndex;
+  const w = words[i];
+  const sentence = isSentenceWord(w);
+  setTimeout(() => speakInline(w.hanzi), 200);
+
+  document.getElementById('lessonBody').innerHTML = `
+    <div class="card-stack">
+      <div class="learn-card">
+        <div class="lc-hanzi ${sentence ? 'sentence' : ''}">${w.hanzi}</div>
+        <div class="lc-pinyin ${sentence ? 'sentence' : ''}">${w.pinyin}</div>
+        <div class="lc-english">${w.english}</div>
+        <button class="lc-audio-btn" onclick="speakInline('${w.hanzi}')">🔊 Hear it again</button>
+      </div>
+      <div class="card-nav">
+        <button class="prev-btn" onclick="learnNav(-1)" ${i === 0 ? 'disabled' : ''}>← Prev</button>
+        <span class="card-counter">${i + 1} / ${words.length}</span>
+        <button class="next-btn" onclick="learnNav(1)">
+          ${i === words.length - 1 ? 'Start Recognition →' : 'Next →'}
+        </button>
+      </div>
+    </div>
+  `;
+}
+function learnNav(dir) {
+  state.learnCardIndex += dir;
+  if (state.learnCardIndex < 0) state.learnCardIndex = 0;
+  if (state.learnCardIndex >= state.setWords.length) {
+    state.lessonStep = 1;
+    state.recognizeIndex = 0;
+    state.recognizeCorrect = 0;
+  }
+  renderLesson();
+}
+
+function renderRecognizePhase() {
+  const words = state.setWords;
+  if (state.recognizeIndex >= words.length) {
+    state.lessonStep = 2;
+    state.produceIndex = 0;
+    state.produceCorrect = 0;
+    renderLesson();
+    return;
+  }
+  const correct = words[state.recognizeIndex];
+  const sentence = isSentenceWord(correct);
+  const others = words.filter(w => w.hanzi !== correct.hanzi);
+  const distractors = shuffle(others).slice(0, Math.min(2, others.length));
+  const options = shuffle([correct, ...distractors]);
+
+  setTimeout(() => speakInline(correct.hanzi), 200);
+
+  document.getElementById('lessonBody').innerHTML = `
+    <div class="quiz-box">
+      <div class="quiz-progress">Recognition · ${state.recognizeIndex + 1} / ${words.length} · ${state.recognizeCorrect} correct</div>
+      <div class="quiz-prompt">
+        <div class="qp-label">What does this mean?</div>
+        <div class="qp-hanzi ${sentence ? 'sentence' : ''}">${correct.hanzi}</div>
+        <button class="replay-btn" onclick="speakInline('${correct.hanzi}')">🔊 Hear it</button>
+      </div>
+      <div class="quiz-options" id="recogOptions">
+        ${options.map(o => `
+          <button class="quiz-option" onclick="recognizeAnswer('${o.hanzi.replace(/'/g,"\\'")}', '${correct.hanzi.replace(/'/g,"\\'")}', this)">
+            ${o.english}
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+function recognizeAnswer(clickedHanzi, correctHanzi, btn) {
+  const buttons = document.querySelectorAll('#recogOptions .quiz-option');
+  buttons.forEach(b => b.disabled = true);
+  const wasCorrect = clickedHanzi === correctHanzi;
+  if (wasCorrect) {
+    btn.classList.add('correct');
+    state.recognizeCorrect++;
+    speakInline(correctHanzi);
+  } else {
+    btn.classList.add('wrong');
+    const correctWord = state.setWords.find(w => w.hanzi === correctHanzi);
+    buttons.forEach(b => { if (b.textContent.trim() === correctWord.english) b.classList.add('correct'); });
+  }
+  setTimeout(() => {
+    state.recognizeIndex++;
+    renderRecognizePhase();
+  }, wasCorrect ? 800 : 1500);
+}
+
+function renderProducePhase() {
+  const words = state.setWords;
+  if (state.produceIndex >= words.length) {
+    state.lessonStep = 3;
+    renderLesson();
+    return;
+  }
+  const correct = words[state.produceIndex];
+  const sentence = isSentenceWord(correct);
+  setTimeout(() => speakInline(correct.hanzi), 200);
+  document.getElementById('lessonBody').innerHTML = `
+    <div class="prod-box">
+      <div class="quiz-progress">Production · ${state.produceIndex + 1} / ${words.length} · ${state.produceCorrect} correct</div>
+      <div class="prod-english">${correct.english}</div>
+      <div class="prod-hanzi ${sentence ? 'sentence' : ''}">${correct.hanzi}</div>
+      <button class="replay-btn" onclick="speakInline('${correct.hanzi}')">🔊 Hear it</button>
+      <div>
+        <input id="prodInput" type="text" autocomplete="off" spellcheck="false"
+               autocapitalize="off" placeholder="type pinyin..."
+               onkeydown="if(event.key==='Enter') checkProduction()">
+      </div>
+      <button class="big-btn" onclick="checkProduction()" style="font-size:15px; padding:10px 26px;">Check</button>
+      <div class="prod-feedback" id="prodFeedback"></div>
+    </div>
+  `;
+  setTimeout(() => document.getElementById('prodInput').focus(), 100);
+}
+function checkProduction() {
+  const input = document.getElementById('prodInput');
+  const fb = document.getElementById('prodFeedback');
+  if (!input || !fb) return;
+  const userVal = input.value.trim();
+  if (!userVal) return;
+  const correct = state.setWords[state.produceIndex];
+  const ok = answersMatch(userVal, correct.pinyin, state.toneStrict);
+  if (ok) {
+    fb.textContent = '✓ Correct! ' + correct.pinyin;
+    fb.className = 'prod-feedback ok';
+    input.className = 'correct'; input.disabled = true;
+    state.produceCorrect++;
+    speakInline(correct.hanzi);
+    setTimeout(() => {
+      state.produceIndex++;
+      renderProducePhase();
+    }, 900);
+  } else {
+    fb.textContent = '✗ It was "' + correct.pinyin + '". Type it to continue.';
+    fb.className = 'prod-feedback err';
+    input.className = 'wrong'; input.value = '';
+    setTimeout(() => { input.className = ''; input.focus(); }, 100);
+  }
+}
+
+function renderReadyToFight() {
+  const chips = state.setWords.map(w => {
+    const sentence = isSentenceWord(w);
+    return `<div class="word-chip">
+      <span class="wc-hanzi" style="${sentence ? 'font-size:14px;' : ''}">${w.hanzi}</span>
+      <span class="wc-pinyin">${w.pinyin}</span>
+      <span class="wc-english">${w.english}</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('lessonBody').innerHTML = `
+    <div class="intro-box">
+      <h2>Lesson complete! 完成!</h2>
+      <p>You've learned <b>${state.setWords.length} ${isSentenceWord(state.setWords[0]) ? 'sentences' : 'words'}</b>. Now prove you've got them — type the pinyin correctly to attack the opponent.</p>
+      <div class="word-chips">${chips}</div>
+      <p style="font-size:13px; color:#888;">Each correct answer = an attack. Wrong = you take damage. Beat the enemy to unlock the next set.</p>
+      <div style="margin-top: 20px;">
+        <button class="big-btn" onclick="startFight()">⚔️ FIGHT!</button>
+        <button class="big-btn ghost" onclick="showMap()">Back to map</button>
+      </div>
+    </div>
+  `;
+}
+
+/* =========================================================
+   FIGHT
+   ========================================================= */
+function startFight() {
+  showScreen('gameScreen');
+  state.playerHP = 100;
+  state.enemyHP = 100;
+  state.combo = 0; state.bestCombo = 0; state.score = 0;
+  state.reviewedCount = 0; state.totalCorrect = 0; state.totalWrong = 0;
+  state.fightQueue = state.setWords.slice();
+  state.currentQuestion = null;
+
+  renderEnemy();
+  renderHP();
+  renderCombo();
+  document.getElementById('levelLabel').textContent = `${state.levelIndex + 1}-${state.setIndex + 1}`;
+  document.getElementById('fightTitle').textContent =
+    `MANDARIN MASHERS · ${CURRICULUM[state.levelIndex].sets[state.setIndex].name}`;
+
+  document.getElementById('answer').addEventListener('keydown', answerKeyHandler);
+  nextFightQuestion();
+  scheduleEnemyTurn();
+}
+function answerKeyHandler(e) {
+  if (e.key === 'Enter') { e.preventDefault(); submitAnswer(); }
+}
+
+function renderEnemy() {
+  const idx = CURRICULUM.slice(0, state.levelIndex)
+    .reduce((n, l) => n + l.sets.length, 0) + state.setIndex;
+  const enemy = ENEMIES[idx % ENEMIES.length];
+  document.getElementById('enemySprite').textContent = enemy.sprite;
+  document.getElementById('enemyName').textContent = enemy.name;
+}
+
+function renderHP() {
+  const p1 = Math.max(state.playerHP, 0), p2 = Math.max(state.enemyHP, 0);
+  document.getElementById('hp1').style.width = p1 + '%';
+  document.getElementById('hp2').style.width = p2 + '%';
+  document.getElementById('hp1Text').textContent = p1;
+  document.getElementById('hp2Text').textContent = p2;
+}
+function renderCombo() {
+  const el = document.getElementById('comboText');
+  if (state.combo >= 2) {
+    el.textContent = `${state.combo} HIT COMBO! 🔥`;
+    el.classList.add('pop');
+    setTimeout(() => el.classList.remove('pop'), 180);
+  } else el.textContent = '';
+  document.getElementById('scoreLabel').textContent = state.score;
+  document.getElementById('bestComboLabel').textContent = state.bestCombo;
+  document.getElementById('reviewedLabel').textContent = state.reviewedCount;
+  document.getElementById('dueLabel').textContent = countDue();
+}
+
+function nextFightQuestion() {
+  if (state.fightQueue.length === 0) state.fightQueue = state.setWords.slice();
+  let idx = 0;
+  if (state.currentQuestion && state.fightQueue.length > 1) {
+    do { idx = Math.floor(Math.random() * state.fightQueue.length); }
+    while (state.fightQueue[idx].hanzi === state.currentQuestion.hanzi);
+  } else {
+    idx = Math.floor(Math.random() * state.fightQueue.length);
+  }
+  state.currentQuestion = state.fightQueue.splice(idx, 1)[0];
+
+  const sentence = isSentenceWord(state.currentQuestion);
+  const promptEl = document.getElementById('promptWord');
+  promptEl.textContent = state.currentQuestion.hanzi;
+  promptEl.className = 'prompt-word' + (sentence ? ' sentence' : '');
+  document.getElementById('promptHint').textContent = state.currentQuestion.english;
+  document.getElementById('srsBadge').textContent = '';
+
+  const inp = document.getElementById('answer');
+  inp.value = ''; inp.className = ''; inp.focus();
+  state.answering = true;
+  if (state.autoSpeak && !state.muted) speakText(state.currentQuestion.hanzi);
+}
+
+function flashSprite(id, cls) {
+  const el = document.getElementById(id); if (!el) return;
+  el.classList.add(cls);
+  setTimeout(() => el.classList.remove(cls), 250);
+}
+function playerAttack(d) {
+  flashSprite('p1', 'attack');
+  state.enemyHP -= d; state.score += d;
+  renderHP(); renderCombo();
+  setTimeout(() => flashSprite('p2', 'hit'), 90);
+}
+function enemyAttack() {
+  if (state.paused || !state.answering || state.enemyHP <= 0) return;
+  const diff = DIFFICULTY[state.difficulty];
+  flashSprite('p2', 'attack');
+  state.playerHP -= diff.enemyDamage;
+  renderHP();
+  setTimeout(() => flashSprite('p1', 'hit'), 90);
+  if (state.playerHP <= 0) endFight(false);
+}
+function scheduleEnemyTurn() {
+  clearTimeout(state.enemyTimer);
+  const interval = DIFFICULTY[state.difficulty].enemyInterval;
+  state.enemyTimer = setTimeout(() => {
+    if (state.playerHP > 0 && state.enemyHP > 0 && !state.paused && state.answering) {
+      enemyAttack(); scheduleEnemyTurn();
+    }
+  }, interval);
+}
+function triggerSpecial() {
+  const el = document.getElementById('specialMove');
+  el.textContent = '🐉 DRAGON FIST! 龙拳';
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 1000);
+}
+
+function submitAnswer() {
+  if (!state.answering || state.paused) return;
+  const inp = document.getElementById('answer');
+  const userAns = inp.value.trim();
+  if (!userAns) return;
+  state.answering = false;
+  const q = state.currentQuestion;
+  const correct = answersMatch(userAns, q.pinyin, state.toneStrict);
+  state.reviewedCount++;
+
+  if (correct) {
+    state.totalCorrect++; state.combo++;
+    state.bestCombo = Math.max(state.bestCombo, state.combo);
+    const base = DIFFICULTY[state.difficulty].playerDamageBase;
+    const dmg = base + state.combo * 2;
+    updateSRS(q.hanzi, true);
+    inp.className = 'correct';
+    playerAttack(dmg);
+    if (state.speakOnAnswer) setTimeout(() => speakInline(q.hanzi), 150);
+    if (state.combo % 5 === 0) {
+      triggerSpecial();
+      setTimeout(() => playerAttack(15), 350);
+    }
+    if (state.enemyHP <= 0) { setTimeout(() => endFight(true), 500); return; }
+    setTimeout(() => { if (state.playerHP > 0) nextFightQuestion(); }, 320);
+  } else {
+    state.totalWrong++; state.combo = 0;
+    updateSRS(q.hanzi, false);
+    const diff = DIFFICULTY[state.difficulty];
+    inp.className = 'wrong';
+    state.playerHP -= 8;
+    state.enemyHP = Math.min(state.enemyHP + diff.enemyHeal, 100);
+    renderHP(); renderCombo();
+    document.getElementById('promptHint').textContent = `❌ "${q.pinyin}" — ${q.english}`;
+    setTimeout(() => flashSprite('p1', 'hit'), 90);
+    setTimeout(() => speakInline(q.hanzi), 300);
+    if (state.playerHP <= 0) { setTimeout(() => endFight(false), 300); return; }
+    setTimeout(() => { if (state.playerHP > 0) nextFightQuestion(); }, 1600);
+  }
+}
+
+function endFight(won) {
+  clearTimeout(state.enemyTimer);
+  state.answering = false;
+  state.lastFightWon = won;
+  if (won) completeSet(state.levelIndex, state.setIndex);
+  showScreen('endScreen');
+  const acc = state.reviewedCount > 0
+    ? Math.round(100 * state.totalCorrect / state.reviewedCount) : 0;
+
+  document.getElementById('endTitle').textContent = won
+    ? '🏆 VICTORY! 胜利!' : '💀 DEFEATED 失败';
+  document.getElementById('endText').innerHTML = `
+    <p style="font-size:16px; color:#ddd;">
+      ${won ? `You've completed <b>${CURRICULUM[state.levelIndex].sets[state.setIndex].name}</b>.`
+            : `The opponent got the better of you this time. Try again — you've already seen these words.`}<br>
+      Score: <b style="color:var(--gold);">${state.score}</b> ·
+      Best combo: <b style="color:var(--gold);">${state.bestCombo}</b> ·
+      Accuracy: <b style="color:var(--gold);">${acc}%</b>
+    </p>`;
+
+  const primary = document.getElementById('endPrimaryBtn');
+  if (won) {
+    primary.textContent = 'Back to map →';
+    primary.onclick = () => showMap();
+  } else {
+    primary.textContent = 'Try again ↻';
+    primary.onclick = () => { startLesson(state.levelIndex, state.setIndex); };
+  }
+}
+function endPrimaryAction() { /* handled per-case */ }
+
+function quitFight() {
+  if (!confirm('Quit this fight? Progress within the fight is lost, but the set stays unlocked.')) return;
+  clearTimeout(state.enemyTimer);
+  showMap();
+}
+function togglePause() {
+  state.paused = !state.paused;
+  document.getElementById('pauseOverlay').classList.toggle('show', state.paused);
+  if (!state.paused) { document.getElementById('answer').focus(); scheduleEnemyTurn(); }
+  else clearTimeout(state.enemyTimer);
+}
+function toggleMute() {
+  state.muted = !state.muted;
+  document.getElementById('muteBtn').textContent = state.muted ? '🔇 Muted' : '🔊 Sound';
+  document.getElementById('muteBtn').classList.toggle('active', state.muted);
+  if (state.muted && typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
+}
+
+/* =========================================================
+   UTIL
+   ========================================================= */
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* =========================================================
+   STATS
+   ========================================================= */
+function showStats() {
+  clearTimeout(state.enemyTimer);
+  showScreen('statsScreen');
+  const allWords = [];
+  CURRICULUM.forEach((level) => {
+    level.sets.forEach((set) => {
+      set.words.forEach(w => {
+        const st = progress.stats[w.hanzi];
+        const card = progress.srs[w.hanzi];
+        if (st || card) allWords.push({ ...w, level: level.name, st, card });
+      });
+    });
+  });
+  const totalSeen = allWords.length;
+  const totalCorrect = allWords.reduce((s, w) => s + (w.st?.correct || 0), 0);
+  const totalWrong = allWords.reduce((s, w) => s + (w.st?.wrong || 0), 0);
+  const acc = (totalCorrect + totalWrong) > 0
+    ? Math.round(100 * totalCorrect / (totalCorrect + totalWrong)) : 0;
+
+  allWords.sort((a, b) => {
+    const accA = a.st ? (a.st.correct / (a.st.correct + a.st.wrong || 1)) : 2;
+    const accB = b.st ? (b.st.correct / (b.st.correct + b.st.wrong || 1)) : 2;
+    return accA - accB;
+  });
+
+  const rows = allWords.slice(0, 100).map(w => {
+    const st = w.st || { correct: 0, wrong: 0 };
+    const total = st.correct + st.wrong;
+    const accuracy = total > 0 ? Math.round(100 * st.correct / total) : 0;
+    const cls = accuracy >= 70 ? 'stats-row-correct' : 'stats-row-wrong';
+    return `<tr>
+      <td style="font-size:20px; color:#fff;">${w.hanzi}</td>
+      <td style="color:#aaa; font-size:12px;">${w.pinyin}</td>
+      <td style="color:#ccc; font-size:12px;">${w.english}</td>
+      <td class="${cls}">${st.correct} ✓ / ${st.wrong} ✗</td>
+      <td class="${cls}">${accuracy}%</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('statsContent').innerHTML = `
+    <p style="color:#ccc; font-size:15px; margin-bottom: 16px;">
+      <b style="color:var(--gold);">${totalSeen}</b> items practiced ·
+      <b style="color:var(--green);">${totalCorrect}</b> correct ·
+      <b style="color:#ff6b6b;">${totalWrong}</b> wrong ·
+      Accuracy: <b style="color:var(--gold);">${acc}%</b>
+    </p>
+    ${totalSeen > 0 ? `
+      <div style="max-height: 55vh; overflow-y: auto; border-radius:12px;
+                  border:1px solid rgba(255,255,255,0.1);">
+        <table class="stats-table">
+          <thead><tr><th>Hanzi</th><th>Pinyin</th><th>English</th><th>Record</th><th>Accuracy</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    ` : '<p style="color:#888;">No data yet — start a lesson!</p>'}
+  `;
+}
+function resetStats() {
+  if (!confirm('Reset ALL progress — unlocked sets, completed sets, and word stats? Cannot be undone.')) return;
+  progress = { unlocked: { "0-0": true }, completed: {}, srs: {}, stats: {} };
+  saveProgress();
+  showMap();
+}
+
+/* =========================================================
+   TUTORIAL — kept from previous build
+   ========================================================= */
+const TUTORIAL_TRACKS = {
+  basics: [
+    { title: "Welcome to the Dojo 欢迎",
+      body: `<p>Before you fight, let's learn how to read and type Chinese.</p>
+        <p>Chinese characters (汉字) don't tell you how to pronounce them. Instead, we use a romanization system called <b>pinyin</b> to write sounds using the Latin alphabet.</p>
+        <p>For example: <b>你好</b> = <b>nǐ hǎo</b> = "hello".</p>` },
+    { title: "Pinyin: Chinese in Latin Letters",
+      body: `<p>Pinyin uses the Latin alphabet, but a few sounds don't match English:</p>
+        <div class="tut-example">
+          <b>c</b> = "ts" → <b>cài</b> (dish)<br>
+          <b>q</b> = "ch" (soft) → <b>qù</b> (go)<br>
+          <b>x</b> = "sh" (soft) → <b>xiè</b> (thank)<br>
+          <b>zh</b> = "j" + r → <b>zhōng</b> (middle)
+        </div>` },
+    { title: "The Four Tones 声调",
+      body: `<p>Chinese is a <b>tonal language</b>. Same syllable, different tone = different word. Click each tone:</p>
+        <div class="tut-tone-grid">
+          <div class="tut-tone-box" onclick="speakInline('mā')"><div class="tone-num">1st</div><div class="tone-char">mā</div><div class="tone-name">flat</div></div>
+          <div class="tut-tone-box" onclick="speakInline('má')"><div class="tone-num">2nd</div><div class="tone-char">má</div><div class="tone-name">rising</div></div>
+          <div class="tut-tone-box" onclick="speakInline('mǎ')"><div class="tone-num">3rd</div><div class="tone-char">mǎ</div><div class="tone-name">dip-rise</div></div>
+          <div class="tut-tone-box" onclick="speakInline('mà')"><div class="tone-num">4th</div><div class="tone-char">mà</div><div class="tone-name">falling</div></div>
+        </div>` },
+    { title: "How to Type Tones",
+      body: `<p>Two ways, both work:</p>
+        <p><b>Option 1 — Tone marks:</b></p>
+        <div class="tut-example">
+          <span class="tut-keyboard">ā</span> <span class="tut-keyboard">á</span>
+          <span class="tut-keyboard">ǎ</span> <span class="tut-keyboard">à</span>
+          &nbsp;·&nbsp;
+          <span class="tut-keyboard">ē</span> <span class="tut-keyboard">é</span>
+          <span class="tut-keyboard">ě</span> <span class="tut-keyboard">è</span>
+        </div>
+        <p><b>Option 2 — Tone numbers:</b> nǐ hǎo = ni3 hao3</p>` },
+    { title: "Tone Drill",
+      body: `<p>Listen, then type the syllable with its tone.</p>`,
+      interactive: 'tone-drill' },
+    { title: "Ready to Learn!",
+      body: `<p>You now know pinyin, tones, and how to type them. Try the <b>Grammar</b> tutorial next, then start your first lesson set.</p>` },
+  ],
+  grammar: [
+    { title: "How Chinese Sentences Work",
+      body: `<p>Chinese word order is <b>Subject–Verb–Object</b> (SVO), like English.</p>
+        <p>Chinese uses <b>particles</b> instead of verb conjugation. This track teaches 是, 的, 了, 吗, plus measure words.</p>` },
+    { title: "是 — 'to be'",
+      body: `<p><b>是 (shì)</b> links subject to noun. Does NOT link subject to adjective.</p>
+        <p style="text-align:center; font-size:16px;">
+          我是学生 = Wǒ shì xuésheng = "I am a student."
+          <button class="speak-inline" onclick="speakInline('我是学生')">🔊</button>
+        </p>
+        <p>With adjectives, drop 是 and use 很: 我很好, not 我是好.</p>` },
+    { title: "是 — check yourself",
+      body: `<p>Which is correct for "She is a teacher"?</p>`,
+      interactive: 'quiz-shi' },
+    { title: "的 — possessive",
+      body: `<p><b>的 (de)</b> = "'s". Owner + 的 + thing.</p>
+        <p style="text-align:center; font-size:16px;">
+          我的书 = "my book" <button class="speak-inline" onclick="speakInline('我的书')">🔊</button>
+        </p>` },
+    { title: "的 — check yourself",
+      body: `<p>How would you say "my friend's cat"?</p>`,
+      interactive: 'quiz-de' },
+    { title: "了 — completion",
+      body: `<p><b>了 (le)</b> marks completed action.</p>
+        <p style="text-align:center; font-size:16px;">
+          我吃饭了 = "I ate" <button class="speak-inline" onclick="speakInline('我吃饭了')">🔊</button>
+        </p>` },
+    { title: "了 — check yourself",
+      body: `<p>Which means "I've already eaten"?</p>`,
+      interactive: 'quiz-le' },
+    { title: "吗 — yes/no questions",
+      body: `<p>Add <b>吗 (ma)</b> at the end for yes/no questions.</p>
+        <p style="text-align:center; font-size:16px;">
+          你是学生吗 = Are you a student?
+          <button class="speak-inline" onclick="speakInline('你是学生吗')">🔊</button>
+        </p>` },
+    { title: "吗 — check yourself",
+      body: `<p>How do you say "Do you like Chinese food?"</p>`,
+      interactive: 'quiz-ma' },
+    { title: "Measure words",
+      body: `<p>Every noun needs a measure word: 一个人 (one person). 个 is general; 本 for books; 杯 for cups; 张 for flat things.</p>` },
+    { title: "Measure words — check",
+      body: `<p>Which is correct for "two books"?</p>`,
+      interactive: 'quiz-mw' },
+  ],
+};
+const GRAMMAR_QUIZZES = {
+  'quiz-shi': { prompt: 'Which is correct for "She is a teacher"?', options: [
+    { text: '她是老师', sub: 'tā shì lǎo shī', correct: true, explain: '✓ 是 links subject to noun.' },
+    { text: '她好老师', sub: 'tā hǎo lǎo shī', correct: false, explain: '✗ Missing 是.' },
+    { text: '她是好', sub: 'tā shì hǎo', correct: false, explain: '✗ With adjectives drop 是.' },
+  ]},
+  'quiz-de': { prompt: 'How would you say "my friend\'s cat"?', options: [
+    { text: '我朋友猫的', sub: '', correct: false, explain: '✗ 的 goes after the owner.' },
+    { text: '我朋友猫', sub: '', correct: false, explain: '✗ Missing 的.' },
+    { text: '我朋友的猫', sub: 'wǒ péngyou de māo', correct: true, explain: '✓ Owner + 的 + thing.' },
+  ]},
+  'quiz-le': { prompt: 'Which means "I\'ve already eaten"?', options: [
+    { text: '我吃饭了', sub: 'wǒ chī fàn le', correct: true, explain: '✓ 了 marks completion.' },
+    { text: '我吃了饭', sub: '', correct: false, explain: '✗ Natural is sentence-final 了.' },
+    { text: '我吃饭', sub: '', correct: false, explain: '✗ Just "I eat."' },
+  ]},
+  'quiz-ma': { prompt: 'How do you say "Do you like Chinese food?"', options: [
+    { text: '你喜欢中国菜吗', sub: '', correct: true, explain: '✓ Statement + 吗.' },
+    { text: '吗你喜欢中国菜', sub: '', correct: false, explain: '✗ 吗 at end.' },
+    { text: '你喜欢中国菜了', sub: '', correct: false, explain: '✗ 了 ≠ question.' },
+  ]},
+  'quiz-mw': { prompt: 'Which is correct for "two books"?', options: [
+    { text: '二本', sub: '', correct: false, explain: '✗ Use 两 before measure words.' },
+    { text: '两本书', sub: 'liǎng běn shū', correct: true, explain: '✓ 两 + 本 + 书.' },
+    { text: '二个书', sub: '', correct: false, explain: '✗ Wrong number and measure word.' },
+  ]},
+};
+const TONE_DRILL_WORDS = [
+  { answer: 'mā' }, { answer: 'má' }, { answer: 'mǎ' }, { answer: 'mà' },
+  { answer: 'nǐ hǎo' }, { answer: 'xiè xie' },
+];
+let tutState = { track: 'basics', step: 0, toneDrillIndex: 0 };
+
+function startTutorial(track) {
+  showScreen('tutorialScreen');
+  tutState = { track: track || 'basics', step: 0, toneDrillIndex: 0 };
+  renderTutorial();
+}
+function switchTrack(track) { tutState.track = track; tutState.step = 0; renderTutorial(); }
+function renderTutorial() {
+  const track = TUTORIAL_TRACKS[tutState.track];
+  const step = track[tutState.step];
+  document.querySelectorAll('.tut-track-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.track === tutState.track);
+  });
+  document.getElementById('tutProgress').innerHTML = track.map((_, i) => {
+    let cls = 'tut-step-dot';
+    if (i < tutState.step) cls += ' done';
+    if (i === tutState.step) cls += ' active';
+    return `<div class="${cls}">${i + 1}</div>`;
+  }).join('');
+
+  let interactiveHtml = '';
+  if (step.interactive === 'tone-drill') {
+    const w = TONE_DRILL_WORDS[tutState.toneDrillIndex % TONE_DRILL_WORDS.length];
+    interactiveHtml = `
+      <div style="text-align:center; color:#aaa; font-size:12px;">Drill ${tutState.toneDrillIndex + 1} of ${TONE_DRILL_WORDS.length}</div>
+      <div style="text-align:center;"><button class="replay-btn" onclick="speakInline('${w.answer}')" style="font-size:14px; padding:8px 18px;">🔊 Listen</button></div>
+      <div style="text-align:center; margin-top:14px;">
+        <input class="tut-input" id="tutDrillInput" placeholder="type pinyin..." onkeydown="if(event.key==='Enter') checkToneDrill()">
+        <button class="big-btn" onclick="checkToneDrill()" style="font-size:16px; padding:12px 28px; margin-left:8px;">Check</button>
+      </div>
+      <div class="tut-feedback" id="tutFeedback"></div>`;
+    setTimeout(() => speakInline(w.answer), 300);
+  } else if (step.interactive && step.interactive.startsWith('quiz-')) {
+    const quiz = GRAMMAR_QUIZZES[step.interactive];
+    interactiveHtml = `
+      <p style="color:#ffd369; font-weight:bold; text-align:center;">${quiz.prompt}</p>
+      <div class="grammar-choice" id="quizChoices">
+        ${quiz.options.map((o, i) => `<button onclick="answerQuiz('${step.interactive}', ${i})">${o.text}<small>${o.sub}</small></button>`).join('')}
+      </div>
+      <div class="tut-feedback" id="tutFeedback"></div>`;
+  }
+  document.getElementById('tutCard').innerHTML = `<h3>${step.title}</h3>${step.body}${interactiveHtml}`;
+  document.getElementById('tutBack').style.visibility = tutState.step === 0 ? 'hidden' : 'visible';
+  document.getElementById('tutCounter').textContent =
+    `${tutState.track === 'grammar' ? 'Grammar' : 'Basics'} · Step ${tutState.step + 1} of ${track.length}`;
+  document.getElementById('tutNext').textContent =
+    tutState.step === track.length - 1 ? 'Done ✓' : 'Next →';
+  setTimeout(() => {
+    const inp = document.getElementById('tutDrillInput');
+    if (inp) inp.focus();
+  }, 100);
+}
+function tutNext() {
+  const track = TUTORIAL_TRACKS[tutState.track];
+  if (tutState.step < track.length - 1) { tutState.step++; renderTutorial(); }
+  else { showScreen('titleScreen'); }
+}
+function tutBack() { if (tutState.step > 0) { tutState.step--; renderTutorial(); } }
+function answerQuiz(quizId, idx) {
+  const quiz = GRAMMAR_QUIZZES[quizId];
+  const opt = quiz.options[idx];
+  const buttons = document.querySelectorAll('#quizChoices button');
+  buttons.forEach((b, i) => {
+    b.disabled = true;
+    if (quiz.options[i].correct) b.classList.add('gc-correct');
+    else if (i === idx) b.classList.add('gc-wrong');
+  });
+  const fb = document.getElementById('tutFeedback');
+  if (opt.correct) {
+    fb.textContent = opt.explain; fb.className = 'tut-feedback ok';
+    speakInline(opt.text);
+  } else {
+    fb.innerHTML = opt.explain + '<br><br>Correct: <b style="color:var(--green);">' +
+      quiz.options.find(o => o.correct).text + '</b>';
+    fb.className = 'tut-feedback err';
+    setTimeout(() => speakInline(quiz.options.find(o => o.correct).text), 300);
+  }
+}
+function checkToneDrill() {
+  const inp = document.getElementById('tutDrillInput');
+  const fb = document.getElementById('tutFeedback');
+  if (!inp || !fb) return;
+  const w = TONE_DRILL_WORDS[tutState.toneDrillIndex % TONE_DRILL_WORDS.length];
+  const ok = answersMatch(inp.value.trim(), w.answer, true) || answersMatch(inp.value.trim(), w.answer, false);
+  if (ok) {
+    fb.textContent = '✓ Correct! ' + w.answer; fb.className = 'tut-feedback ok';
+    speakInline(w.answer);
+    tutState.toneDrillIndex++;
+    setTimeout(() => {
+      if (tutState.toneDrillIndex >= TONE_DRILL_WORDS.length) tutNext();
+      else renderTutorial();
+    }, 1000);
+  } else {
+    fb.textContent = '✗ Try again — it was "' + w.answer + '".';
+    fb.className = 'tut-feedback err';
+    setTimeout(() => { inp.value = ''; inp.focus(); }, 100);
+  }
+}
+
+/* =========================================================
+   WIRING
+   ========================================================= */
+document.querySelectorAll('.diff-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    state.difficulty = btn.dataset.diff;
+  });
+});
+document.addEventListener('DOMContentLoaded', () => {
+  const rateSlider = document.getElementById('voiceRate');
+  if (rateSlider) rateSlider.addEventListener('input', e => {
+    state.voiceRate = parseFloat(e.target.value);
+    document.getElementById('rateLabel').textContent = state.voiceRate.toFixed(2) + '×';
+  });
+  const toneStrict = document.getElementById('toneStrict');
+  if (toneStrict) toneStrict.addEventListener('change', e => { state.toneStrict = e.target.checked; });
+  const autoSpeak = document.getElementById('autoSpeak');
+  if (autoSpeak) autoSpeak.addEventListener('change', e => { state.autoSpeak = e.target.checked; });
+  const speakOnAnswer = document.getElementById('speakOnAnswer');
+  if (speakOnAnswer) speakOnAnswer.addEventListener('change', e => { state.speakOnAnswer = e.target.checked; });
+});
+</script <script type="module">
+  import { initializeApp } from "https://gstatic.com";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://gstatic.com";
+  import { getFirestore, initializeFirestore, persistentLocalCache, doc, setDoc, onSnapshot } from "https://gstatic.com";
+
+  // 1. Register Offline Service Worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js');
+  }
+
+  // 2. Initialize Firebase with Offline Persistence Enabled
+  const firebaseConfig = {
+    // apiKey: "AIzaSyCNeZTLWtw7E8FC261lMFBCgJ97afZZ38Y",
+
+    authDomain: "mandarin-mashers.firebaseapp.com",
+
+    projectId: "mandarin-mashers",
+
+    storageBucket: "mandarin-mashers.firebasestorage.app",
+
+    messagingSenderId: "1080894538986",
+
+    appId: "1:1080894538986:web:c4e9e5067ef351923bc393"
+  };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = initializeFirestore(app, { localCache: persistentLocalCache() });
+
+  // 3. Auto-Sync Function (Call window.saveMyData(yourDataObject) whenever progress changes)
+  window.saveMyData = async (dataObject) => {
+    const user = auth.currentUser;
+    if (!user) return;
+    // Saves locally immediately if offline, and auto-syncs when online!
+    await setDoc(doc(db, "users", user.uid), dataObject, { merge: true });
+  };
+
+  // 4. Listen for Live Cloud/Local Updates
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      onSnapshot(doc(db, "users", user.uid), (docSnap) => {
+        if (docSnap.exists()) {
+          const savedData = docSnap.data();
+          console.log("Loaded latest progress:", savedData);
+          // if (docSnap.exists()) {
+  const savedData = docSnap.data();
+
+  // 1. Update the global progress object with your cloud save
+  progress = savedData;
+  if (!progress.unlocked) progress.unlocked = { "0-0": true };
+  if (!progress.completed) progress.completed = {};
+  if (!progress.srs) progress.srs = {};
+  if (!progress.stats) progress.stats = {};
+
+  // 2. Keep localStorage updated as an offline backup
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(progress)); } catch {}
+
+  // 3. Refresh both the top counters and the level map
+  if (typeof renderCombo === "function") renderCombo();
+  if (typeof showMap === "function") showMap();
+}
+        }
+      });
+    } else {
+      // Prompt once to log in on a new device
+      const email = prompt("Enter your Firebase email:");
+      const pass = prompt("Enter your Firebase password:");
+      if (email && pass) signInWithEmailAndPassword(auth, email, pass);
+    }
+  });
+</script>
+</body>
+</html>
